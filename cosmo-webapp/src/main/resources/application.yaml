@@ -1,36 +1,36 @@
 cosmo:
-  tickets: 
-    serverSecret: 73d320ab-e7d3-4183-9a62-9628e5efe181 
-    serverInteger: 163184592    
-  caldav:   
-     schedulingEnabled: true
+  tickets:
+    serverSecret: 73d320ab-e7d3-4183-9a62-9628e5efe181
+    serverInteger: 163184592
+  caldav:
+    schedulingEnabled: true
   event:
     validation:
       allowed:
         recurrence:
           frequencies: DAILY,WEEKLY,MONTHLY,YEARLY,SECONDLY
       summary:
-       min:
-        length: 0
-       max: 
-        length: 2137483647
+        min:
+          length: 0
+        max:
+          length: 2137483647
       location:
-       min:
-        length: 0
-       max: 
-        length: 2137483647
+        min:
+          length: 0
+        max:
+          length: 2137483647
       description:
-       min:
-        length: 0
-       max: 
-        length: 2137483647
+        min:
+          length: 0
+        max:
+          length: 2137483647
       attendees:
-         max:
-           length: 100
+        max:
+          length: 100
       icaldata:
-         #1 MB in bytes
-         max:
-          length: 1048576         
+        #1 MB in bytes
+        max:
+          length: 1048576
   user:
     password:
       min:
@@ -38,7 +38,7 @@ cosmo:
       max:
         length: 25
 
-# Connection timeout for reaching external content when validation is performed (in millis) 
+# Connection timeout for reaching external content when validation is performed (in millis)
 external:
   content:
     connection:
@@ -46,11 +46,11 @@ external:
     size: 1048576
     non:
       proxyed:
-        hosts:  
-calendar: 
+        hosts:
+calendar:
   server:
-   productId: COSMO
-      
+    productId: COSMO
+
 server:
   port: 8080
   servlet:
@@ -63,18 +63,23 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:33060/test?autoReconnect=true
     username: root
-    password: 
+    password:
     driver-class-name: org.mariadb.jdbc.Driver
     hikari:
       maximum-pool-size: 10
-  jpa:        
+  jpa:
     properties:
-     hibernate.dialect: org.hibernate.dialect.MariaDB103Dialect     
-     hibernate.cache.use_query_cache: false
-     hibernate.cache.use_second_level_cache: false
-     hibernate.show_sql: false
-     hibernate.hbm2ddl.auto: create
-     hibernate.id.new_generator_mappings: false
-     
+      hibernate.dialect: org.hibernate.dialect.MariaDB103Dialect
+      hibernate.cache.use_query_cache: false
+      hibernate.cache.use_second_level_cache: false
+      hibernate.show_sql: false
+      hibernate.hbm2ddl.auto: create
+      hibernate.id.new_generator_mappings: false
+
 mariaDB4j:
- port: 33060     
+  port: 33060
+
+ldap:
+  port: 8442
+  host: ldap://127.0.0.1
+  parameters: ou=caldav,ou=services,dc=me,dc=local
