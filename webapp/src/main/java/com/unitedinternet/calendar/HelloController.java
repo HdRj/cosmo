@@ -4,16 +4,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.ldap.userdetails.Person;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Arrays;
 
 @RestController
+@RequestMapping("/test")
 public class HelloController {
-    @GetMapping("/")
+    @GetMapping("/hello")
     public String hello(Authentication authentication) {
+        String name = "anonym";
+        if(authentication!=null){
+            name = authentication.getName();
+        }
         return "Hello " +
-                authentication.getName() +
+                name +
                 "!";
     }
 

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>cosmo-multimodule</artifactId>
+        <groupId>net.oneandone.cosmo</groupId>
+        <version>5.0.7-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>webapp</artifactId>
+    <packaging>jar</packaging>
+    <name>webapp</name>
+
+    <dependencies>
+<!--        <dependency>-->
+<!--            <groupId>net.oneandone.cosmo</groupId>-->
+<!--            <artifactId>cosmo-core</artifactId>-->
+<!--            <version>5.0.0</version>-->
+<!--        </dependency>-->
+
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- database drivers -->
+        <dependency>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.vorburger.mariaDB4j</groupId>
+            <artifactId>mariaDB4j-core</artifactId>
+        </dependency>
+
+        <!--		<dependency>-->
+        <!--			<groupId>ch.vorburger.mariaDB4j</groupId>-->
+        <!--			<artifactId>mariaDB4j-app</artifactId>-->
+        <!--		</dependency>-->
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.unboundid</groupId>
+            <artifactId>unboundid-ldapsdk</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.ldap</groupId>
+            <artifactId>spring-ldap-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-ldap</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>org.springframework</groupId>-->
+<!--                    <artifactId>spring-beans</artifactId>-->
+<!--                </exclusion>-->
+<!--                <exclusion>-->
+<!--                    <groupId>org.springframework</groupId>-->
+<!--                    <artifactId>spring-core</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>net.oneandone.cosmo</groupId>
+            <artifactId>cosmo-api</artifactId>
+            <version>5.0.7-SNAPSHOT</version>
+<!--            <scope>system</scope>-->
+<!--            <systemPath>/home/user/projects/Pets/TEST/CosmoMy/cosmo/cosmo-api/target/cosmo-api-5.0.7-SNAPSHOT.jar</systemPath>-->
+        </dependency>
+        <dependency>
+            <groupId>net.oneandone.cosmo</groupId>
+            <artifactId>cosmo-core</artifactId>
+            <version>5.0.7-SNAPSHOT</version>
+<!--            <scope>system</scope>-->
+<!--            <systemPath>/home/user/projects/Pets/TEST/CosmoMy/cosmo/cosmo-core/target/cosmo-core-5.0.7-SNAPSHOT.jar</systemPath>-->
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>webapp</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.springframework.boot</groupId>-->
+<!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
+<!--                <configuration>-->
+<!--                    <mainClass>com.unitedinternet.calendar.CalendarDemoApplication</mainClass>-->
+<!--                    <layout>JAR</layout>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+
+
+<!--            			<plugin>-->
+<!--            				<groupId>org.apache.maven.plugins</groupId>-->
+<!--            				<artifactId>maven-war-plugin</artifactId>-->
+<!--            				<version>3.3.2</version>-->
+<!--            				<configuration>-->
+<!--            					<configuration>-->
+<!--            						<failOnMissingWebXml>false</failOnMissingWebXml>-->
+<!--            					</configuration>-->
+<!--            				</configuration>-->
+<!--            			</plugin>-->
+        </plugins>
+
+    </build>
+
+</project>
