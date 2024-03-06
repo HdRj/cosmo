@@ -26,21 +26,23 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		
+
 		<maven.compiler.target>17</maven.compiler.target>
 		<maven.compiler.source>17</maven.compiler.source>
-			
+
 		<qxlint.report.profile>false</qxlint.report.profile>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		
+
 		<spring.boot.version>2.5.15</spring.boot.version>
-		<org.springframework.security.version>5.3.13.RELEASE</org.springframework.security.version>
+		<org.springframework.security.version>5.8.10</org.springframework.security.version>
+
+		<spring.ldap.core.version>3.2.2</spring.ldap.core.version>
 		<hibernate-validator.version>6.0.19.Final</hibernate-validator.version>
-				
+
 		<javax.el.version>2.2.4</javax.el.version>
 		<jackrabbit.version>2.19.0</jackrabbit.version>
 		<ical4j.version>3.0.27</ical4j.version>
-			
+
 		<aspectjweaver.version>1.8.9</aspectjweaver.version>
 		<slf4j.version>1.7.30</slf4j.version>
 		<logback.version>1.2.3</logback.version>
@@ -52,14 +54,14 @@
 		<stax.version>1.0.1</stax.version>
 		<woodstox.version>4.0.6</woodstox.version>
 		<httpclient.version>4.5.12</httpclient.version>
-		<jackson.version>2.11.0</jackson.version>		
+		<jackson.version>2.11.0</jackson.version>
 		<abdera.version>1.1.3</abdera.version>
 		<junit.version>5.9.2</junit.version>
-		
+
 		<!-- Overwrite for java 17 -->
 		<spotbugs-maven-plugin.version>4.7.3.4</spotbugs-maven-plugin.version>
 		<maven-dependency-plugin.version>3.6.0</maven-dependency-plugin.version>
-		
+
 		<!-- Deactivate checkstyle, findbugs, jacoco and pmd -->
 		<checkstyle.skip>true</checkstyle.skip>
 		<spotbugs.skip>true</spotbugs.skip>
@@ -68,17 +70,18 @@
 		<enforcer.skip>true</enforcer.skip>
 		<maven.javadoc.failOnError>false</maven.javadoc.failOnError>
 		<jacoco.skip>true</jacoco.skip>
-		
+
 	</properties>
 
 	<modules>
 		<module>cosmo-api</module>
 		<module>cosmo-core</module>
+		<module>webapp</module>
 	</modules>
 
 	<dependencyManagement>
 		<dependencies>
-			
+
 			<dependency>
 				<!-- Import dependency management from Spring Boot -->
 				<groupId>org.springframework.boot</groupId>
@@ -87,7 +90,7 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-						
+
 
 			<!-- XML & co. -->
 			<dependency>
@@ -118,13 +121,13 @@
 				<artifactId>mariadb-java-client</artifactId>
 				<version>${mariadb.version}</version>
 			</dependency>
-						
+
 			<dependency>
 				<groupId>ch.vorburger.mariaDB4j</groupId>
 				<artifactId>mariaDB4j-core</artifactId>
 				<version>${mariadb4j.version}</version>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>ch.vorburger.mariaDB4j</groupId>
 				<artifactId>mariaDB4j-app</artifactId>
@@ -142,12 +145,12 @@
 						<groupId>commons-logging</groupId>
 					</exclusion>
 					<exclusion>
-						<groupId>org.slf4j</groupId>						
-						<artifactId>slf4j-log4j12</artifactId>						
+						<groupId>org.slf4j</groupId>
+						<artifactId>slf4j-log4j12</artifactId>
 					</exclusion>
 				</exclusions>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>org.apache.jackrabbit</groupId>
 				<artifactId>jackrabbit-webdav</artifactId>
@@ -162,28 +165,35 @@
 			</dependency>
 
 			<dependency>
-				<groupId>org.springframework.security</groupId>
-				<artifactId>spring-security-config</artifactId>
-				<version>${org.springframework.security.version}</version>
-				<scope>runtime</scope>
-				<exclusions>
-					<exclusion>
-						<groupId>org.springframework</groupId>
-						<artifactId>spring-expression</artifactId>
-					</exclusion>
-					<exclusion>
-						<artifactId>commons-logging</artifactId>
-						<groupId>commons-logging</groupId>
-					</exclusion>
-					
-				</exclusions>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-security</artifactId>
+				<version>${spring.boot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
+
+			<!-- https://mvnrepository.com/artifact/org.springframework.ldap/spring-ldap-core -->
+			<dependency>
+				<groupId>org.springframework.ldap</groupId>
+				<artifactId>spring-ldap-core</artifactId>
+				<!--				<version>3.2.2</version>-->
+				<version>${spring.ldap.core.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.security</groupId>
+				<artifactId>spring-security-ldap</artifactId>
+				<version>${org.springframework.security.version}</version>
+			</dependency>
+
 			<dependency>
 				<groupId>org.aspectj</groupId>
 				<artifactId>aspectjweaver</artifactId>
 				<version>${aspectjweaver.version}</version>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>xerces</groupId>
 				<artifactId>xercesImpl</artifactId>
@@ -198,7 +208,7 @@
 
 			<!-- OTHER -->
 
-			<!-- abdera is the ATOM implementation. This library is still used for 
+			<!-- abdera is the ATOM implementation. This library is still used for
 				parsing eTags. -->
 			<dependency>
 				<groupId>org.apache.abdera</groupId>
@@ -276,7 +286,14 @@
 				<artifactId>jackson-databind</artifactId>
 				<version>${jackson.version}</version>
 			</dependency>
-		
+
+			<dependency>
+				<groupId>jakarta.validation</groupId>
+				<artifactId>jakarta.validation-api</artifactId>
+				<version>3.0.0</version> <!-- або відповідна версія -->
+			</dependency>
+
+
 			<!-- Test -->
 			<dependency>
 				<groupId>org.junit.jupiter</groupId>
@@ -286,7 +303,7 @@
 			</dependency>
 
 		</dependencies>
-	</dependencyManagement>	
+	</dependencyManagement>
 
 	<build>
 		<plugins>
@@ -328,14 +345,12 @@
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<configuration>
 					<doclint>none</doclint>
-					<quiet>true</quiet>					
+					<quiet>true</quiet>
 				</configuration>
 			</plugin>
-			
-			
-			
 		</plugins>
 	</build>
+
 
 	<reporting>
 		<plugins>
@@ -346,7 +361,7 @@
 					<failOnViolation>false</failOnViolation>
 					<configLocation>checkstyle-suppressions.xml</configLocation>
 				</configuration>
-			</plugin>			
+			</plugin>
 		</plugins>
 	</reporting>
 
@@ -356,5 +371,6 @@
 		<url>https://github.com/1and1/</url>
 		<tag>cosmo-multimodule-1.5.3</tag>
 	</scm>
-		
+
 </project>
+
