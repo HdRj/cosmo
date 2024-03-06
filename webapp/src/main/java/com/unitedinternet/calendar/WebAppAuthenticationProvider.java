@@ -99,17 +99,16 @@ public class WebAppAuthenticationProvider implements AuthenticationProvider {
     }
 
     private User authenticateUser(Authentication authentication){
-        String userName = authentication.getName();
+        String userUid = authentication.getName();
 
-        User user = this.userService.getUser(userName);
+        User user = this.userService.getUserByUid(userUid);
         if (user != null) {
             LOGGER.info("[AUTH] Found user with uid: {}", user.getUid());
             return user;
         } else {
-            LOGGER.info("[AUTH] Not found user with uid: {}", userName);
+            LOGGER.info("[AUTH] Not found user with uid: {}", userUid);
             return null;
         }
-
     }
 
     @Override
