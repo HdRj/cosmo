@@ -46,8 +46,6 @@ public interface UserService extends Service {
      */
     public User getUserByEmail(String email);
 
-    public User getUserByUid(String uid);
-
     /**
      * Creates a user account in the repository. Digests the raw password and uses the result to replace the raw
      * password. Returns a new instance of <code>User</code> after saving the original one.
@@ -123,6 +121,4 @@ public interface UserService extends Service {
      * Generates a random password in a format suitable for presentation as an authentication credential.
      */
     public String generatePassword();
-
-    public String getDigestAlgorithm();
 }

@@ -112,7 +112,7 @@ public class DavUserPrincipalCollection extends DavResourceBase implements DavCo
     }
 
     public void writeTo(OutputContext outputContext) throws CosmoDavException, IOException {
-        //throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     public void addMember(org.apache.jackrabbit.webdav.DavResource member, InputContext inputContext)

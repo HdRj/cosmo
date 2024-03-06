@@ -109,24 +109,6 @@ public class StandardUserService extends BaseService implements UserService {
     }
 
     /**
-     * Returns the user account identified by the given UID.
-     *
-     * @param uid
-     *            the uid of the account to return
-     *
-     * @throws DataRetrievalFailureException
-     *             if the account does not exist
-     */
-    public User getUserByUid(String uid) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("getting user with uid {}", uid);
-        }
-        return userDao.getUserByUid(uid);
-    }
-
-
-
-    /**
      * Creates a user account in the repository. Digests the raw password and uses the result to replace the raw
      * password. Returns a new instance of <code>User</code> after saving the original one.
      *
