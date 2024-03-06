@@ -87,8 +87,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    public AllowAllAuthenticationProvider customAuthenticationProvider() {
-        return new AllowAllAuthenticationProvider(userService,entityFactory);
+    public WebAppAuthenticationProvider customAuthenticationProvider() {
+        return new WebAppAuthenticationProvider(userService,entityFactory);
     }
 
     @Override

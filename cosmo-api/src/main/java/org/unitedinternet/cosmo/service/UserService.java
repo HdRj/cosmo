@@ -121,4 +121,6 @@ public interface UserService extends Service {
      * Generates a random password in a format suitable for presentation as an authentication credential.
      */
     public String generatePassword();
+
+    public String getDigestAlgorithm();
 }
