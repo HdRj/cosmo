@@ -83,7 +83,8 @@ mariaDB4j:
 ldap:
   port: 8442
   host: ldap://127.0.0.1
-  parameters: ou=caldav,ou=services,dc=me,dc=local
+  parameters: cn=calendar,ou=hosts,dc=me,dc=local
+#  parameters: ou=caldav,ou=services,dc=me,dc=local
 
 management:
   endpoints:
@@ -94,3 +95,11 @@ management:
     endpoint:
       health:
         show-details: always
+
+logging:
+  level:
+    org:
+      springframework:
+#        security: DEBUG
+#        ldap: DEBUG
+
