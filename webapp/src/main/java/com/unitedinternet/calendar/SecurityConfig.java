@@ -24,11 +24,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private String ldapHost;
     @Value("${ldap.parameters}")
     private String ldapParameters;
-
+    @Value("${spring.security.enable-csrf}")
+    private Boolean enableCSRF;
+    @Value("${spring.security.enable-cors}")
+    private Boolean enableCors;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests()
+        http
+                .csrf(csrf -> {if(!enableCSRF) csrf.disable();})
+                .cors(cors -> {if(!enableCSRF) cors.disable();})
+                .authorizeRequests()
                 .antMatchers("/url/**").permitAll()
                 //.antMatchers("/actuator/**").hasRole("USER")
                 .antMatchers("/test/**").permitAll()

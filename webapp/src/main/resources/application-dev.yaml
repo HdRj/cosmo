@@ -76,6 +76,9 @@ spring:
       hibernate.show_sql: false
       hibernate.hbm2ddl.auto: validate
       hibernate.id.new_generator_mappings: false
+  security:
+    enable-csrf: true
+    enable-cors: true
 
 mariaDB4j:
   port: 3306
@@ -84,7 +87,6 @@ ldap:
   port: 8442
   host: ldap://127.0.0.1
   parameters: cn=calendar,ou=hosts,dc=me,dc=local
-#  parameters: ou=caldav,ou=services,dc=me,dc=local
 
 management:
   endpoints:
