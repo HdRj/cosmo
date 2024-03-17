@@ -12,6 +12,8 @@ import org.springframework.security.ldap.authentication.BindAuthenticator;
 import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.unitedinternet.cosmo.model.EntityFactory;
+import org.unitedinternet.cosmo.service.UserService;
 
 
 @Configuration
@@ -28,6 +30,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private Boolean enableCSRF;
     @Value("${spring.security.enable-cors}")
     private Boolean enableCors;
+
+    private final UserService userService;
+    private final EntityFactory entityFactory;
+
+    public SecurityConfig(UserService userService, EntityFactory entityFactory) {
+        this.userService = userService;
+        this.entityFactory = entityFactory;
+    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -56,13 +66,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new LdapTemplate(contextSource());
     }
 
+//    @Override
+//    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+//        BindAuthenticator bindAuthenticator = new BindAuthenticator(contextSource());
+//        String [] patterns = {"uid={0},ou=accounts,ou=caldav,ou=services,dc=me,dc=local"};
+//        bindAuthenticator.setUserDnPatterns(patterns);
+//        LdapAuthenticationProvider ldapAuthenticationProvider = new LdapAuthenticationProvider(bindAuthenticator);
+//        auth.authenticationProvider(ldapAuthenticationProvider);
+//    }
+
+    @Bean
+    public WebAppLdapAuthenticationProvider customAuthenticationProvider() {
+        return new WebAppLdapAuthenticationProvider(userService,entityFactory,contextSource());
+    }
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        BindAuthenticator bindAuthenticator = new BindAuthenticator(contextSource());
-        String [] patterns = {"uid={0},ou=accounts,ou=caldav,ou=services,dc=me,dc=local"};
-        bindAuthenticator.setUserDnPatterns(patterns);
-        LdapAuthenticationProvider ldapAuthenticationProvider = new LdapAuthenticationProvider(bindAuthenticator);
-        auth.authenticationProvider(ldapAuthenticationProvider);
+        auth.authenticationProvider(customAuthenticationProvider());
     }
 
 }

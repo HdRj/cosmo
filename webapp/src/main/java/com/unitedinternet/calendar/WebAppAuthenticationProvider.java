@@ -28,7 +28,7 @@ import java.security.MessageDigest;
  * @author daniel grigore
  *
  */
-@Primary
+//@Primary
 @Component
 @Transactional
 public class WebAppAuthenticationProvider implements AuthenticationProvider {
