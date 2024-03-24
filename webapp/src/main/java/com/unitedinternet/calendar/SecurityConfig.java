@@ -1,5 +1,6 @@
 package com.unitedinternet.calendar;
 
+import com.unitedinternet.calendar.utils.EmailValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.ldap.core.LdapTemplate;
@@ -33,10 +34,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final UserService userService;
     private final EntityFactory entityFactory;
+    private final EmailValidator emailValidator;
 
-    public SecurityConfig(UserService userService, EntityFactory entityFactory) {
+    public SecurityConfig(UserService userService, EntityFactory entityFactory, EmailValidator emailValidator) {
         this.userService = userService;
         this.entityFactory = entityFactory;
+        this.emailValidator = emailValidator;
     }
 
     @Override
@@ -77,7 +80,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     public WebAppLdapAuthenticationProvider customAuthenticationProvider() {
-        return new WebAppLdapAuthenticationProvider(userService,entityFactory,contextSource());
+        return new WebAppLdapAuthenticationProvider(userService,entityFactory,contextSource(),emailValidator);
     }
 
     @Override

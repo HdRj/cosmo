@@ -1,5 +1,6 @@
 package com.unitedinternet.calendar;
 
+import com.unitedinternet.calendar.utils.EmailValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
@@ -27,13 +28,14 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 
     private final UserService userService;
     private final EntityFactory entityFactory;
-
     private final LdapContextSource ldapContextSource;
+    private final EmailValidator emailValidator;
 
-    public WebAppLdapAuthenticationProvider(UserService userService, EntityFactory entityFactory, LdapContextSource ldapContextSource) {
+    public WebAppLdapAuthenticationProvider(UserService userService, EntityFactory entityFactory, LdapContextSource ldapContextSource, EmailValidator emailValidator) {
         this.userService = userService;
         this.entityFactory = entityFactory;
         this.ldapContextSource = ldapContextSource;
+        this.emailValidator = emailValidator;
     }
 
     @Override
@@ -51,8 +53,12 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 //        LdapUserDetails ldapUserDetails = (LdapUserDetails) ldapAuthentication.getPrincipal();
 //        LOGGER.info("DN: " + ldapUserDetails.getDn());
 //        LOGGER.info("UserName: " + ldapUserDetails.getUsername());
-
-        User user = this.createUserIfNotPresent(userName,userName);
+        String email = userName;
+        if(!emailValidator.checkEmail(email)){
+            LOGGER.error("[AUTH] Email address is not valid: {}", email);
+            return null;
+        }
+        User user = this.createUserIfNotPresent(userName,email);
         return new UsernamePasswordAuthenticationToken(
                 new CosmoUserDetails(user),
                 authentication.getCredentials(),
