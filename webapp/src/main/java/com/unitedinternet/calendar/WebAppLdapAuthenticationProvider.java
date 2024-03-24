@@ -1,6 +1,7 @@
 package com.unitedinternet.calendar;
 
 import com.unitedinternet.calendar.utils.EmailValidator;
+import com.unitedinternet.calendar.utils.RandomStringGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
@@ -30,12 +31,14 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
     private final EntityFactory entityFactory;
     private final LdapContextSource ldapContextSource;
     private final EmailValidator emailValidator;
+    private final RandomStringGenerator randomStringGenerator;
 
-    public WebAppLdapAuthenticationProvider(UserService userService, EntityFactory entityFactory, LdapContextSource ldapContextSource, EmailValidator emailValidator) {
+    public WebAppLdapAuthenticationProvider(UserService userService, EntityFactory entityFactory, LdapContextSource ldapContextSource, EmailValidator emailValidator, RandomStringGenerator randomStringGenerator) {
         this.userService = userService;
         this.entityFactory = entityFactory;
         this.ldapContextSource = ldapContextSource;
         this.emailValidator = emailValidator;
+        this.randomStringGenerator = randomStringGenerator;
     }
 
     @Override
@@ -84,7 +87,7 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
         user.setEmail(email);
         user.setFirstName(userName);
         user.setLastName(userName);
-        user.setPassword("NOT_NULL");
+        user.setPassword(randomStringGenerator.generatePassword(16));
         user = this.userService.createUser(user);
         return user;
     }
