@@ -4,6 +4,7 @@ import com.unitedinternet.calendar.utils.EmailValidator;
 import com.unitedinternet.calendar.utils.RandomStringGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -33,6 +34,9 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
     private final EmailValidator emailValidator;
     private final RandomStringGenerator randomStringGenerator;
 
+    @Value("${ldap.auth.pattern}")
+    private String ldapPattern;
+
     public WebAppLdapAuthenticationProvider(UserService userService, EntityFactory entityFactory, LdapContextSource ldapContextSource, EmailValidator emailValidator, RandomStringGenerator randomStringGenerator) {
         this.userService = userService;
         this.entityFactory = entityFactory;
@@ -45,7 +49,7 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
         BindAuthenticator bindAuthenticator = new BindAuthenticator(ldapContextSource);
-        String [] patterns = {"uid={0},ou=accounts,ou=caldav,ou=services,dc=me,dc=local"};
+        String [] patterns = {ldapPattern};
         bindAuthenticator.setUserDnPatterns(patterns);
         LdapAuthenticationProvider ldapAuthenticationProvider = new LdapAuthenticationProvider(bindAuthenticator);
 

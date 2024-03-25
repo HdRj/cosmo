@@ -87,6 +87,8 @@ ldap:
   port: 8442
   host: ldap://127.0.0.1
   parameters: cn=calendar,ou=hosts,dc=me,dc=local
+  auth:
+    pattern: uid={0},ou=accounts,ou=caldav,ou=services,dc=me,dc=local
   search:
     filter: (&(sendmailMTAMapValue=kmptest)(o=kempo.eu))
     base: ou=other,ou=services,dc=me,dc=local
