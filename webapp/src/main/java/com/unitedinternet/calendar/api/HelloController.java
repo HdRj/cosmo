@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.ldap.userdetails.Person;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,11 +17,6 @@ import java.util.List;
 @RequestMapping("test")
 public class HelloController {
 
-    private final LdapSearchComponent ldapSearchComponent;
-
-    public HelloController(LdapSearchComponent ldapSearchComponent) {
-        this.ldapSearchComponent = ldapSearchComponent;
-    }
 
     @GetMapping("/")
     public String hello(Authentication authentication) {
@@ -45,8 +41,4 @@ public class HelloController {
         return "<h2>Test</h2><br/>It is working...";
     }
 
-    @GetMapping("/ldap/search")
-    public List<String> ldapSearch(){
-        return ldapSearchComponent.search();
-    }
 }

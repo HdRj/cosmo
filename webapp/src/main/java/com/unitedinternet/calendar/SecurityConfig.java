@@ -1,5 +1,6 @@
 package com.unitedinternet.calendar;
 
+import com.unitedinternet.calendar.ldap.LdapSearchComponent;
 import com.unitedinternet.calendar.utils.EmailValidator;
 import com.unitedinternet.calendar.utils.RandomStringGenerator;
 import org.springframework.context.annotation.Bean;
@@ -26,17 +27,27 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private String ldapPort;
     @Value("${ldap.host}")
     private String ldapHost;
-    @Value("${ldap.parameters}")
+    @Value("${ldap.manager.username}")
     private String ldapParameters;
     @Value("${spring.security.enable-csrf}")
     private Boolean enableCSRF;
     @Value("${spring.security.enable-cors}")
     private Boolean enableCors;
 
+    @Value("${ldap.email.filter.o}")
+    private String ldapFilterO;
+
+    @Value("${ldap.email.base}")
+    private String ldapBase;
+
+    @Value("${ldap.email.attribute}")
+    private String ldapAttribute;
+
     private final UserService userService;
     private final EntityFactory entityFactory;
     private final EmailValidator emailValidator;
     private final RandomStringGenerator randomStringGenerator;
+
 
     public SecurityConfig(UserService userService, EntityFactory entityFactory, EmailValidator emailValidator, RandomStringGenerator randomStringGenerator) {
         this.userService = userService;
@@ -88,7 +99,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 entityFactory,
                 contextSource(),
                 emailValidator,
-                randomStringGenerator
+                randomStringGenerator,
+                new LdapSearchComponent(ldapFilterO, ldapBase, ldapAttribute, ldapTemplate())
         );
     }
 

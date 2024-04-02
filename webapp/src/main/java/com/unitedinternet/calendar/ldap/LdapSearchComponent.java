@@ -12,29 +12,32 @@ import java.util.List;
 @Component
 public class LdapSearchComponent {
 
-    @Value("${ldap.search.filter}")
-    private String ldapFilter;
-
-    @Value("${ldap.search.base}")
-    private String ldapBase;
-
-    @Value("${ldap.search.attribute}")
-    private String ldapAttribute;
-
+    private final String ldapFilterO;
+    private final String ldapBase;
+    private final String ldapAttribute;
 
     private final LdapTemplate ldapTemplate;
 
-    public LdapSearchComponent(LdapTemplate ldapTemplate) {
+    public LdapSearchComponent(
+            @Value("${ldap.email.filter.o}") String ldapFilterO,
+            @Value("${ldap.email.base}") String ldapBase,
+            @Value("${ldap.email.attribute}") String ldapAttribute,
+            LdapTemplate ldapTemplate
+    ) {
+        this.ldapFilterO = ldapFilterO;
+        this.ldapBase = ldapBase;
+        this.ldapAttribute = ldapAttribute;
         this.ldapTemplate = ldapTemplate;
     }
 
-    public List<String> search() {
+    public List<String> search(String uid, String oValue) {
         // LDAP filter
-        String filter = ldapFilter;
+        String filter = "(&(sendmailMTAMapValue="+uid+")(o="+oValue+"))";
 
         List<String> results = ldapTemplate.search(
                 ldapBase,
-                filter, new AttributesMapper<String>() {
+                filter,
+                new AttributesMapper<String>() {
                     @Override
                     public String mapFromAttributes(Attributes attributes) throws NamingException {
 
@@ -45,5 +48,8 @@ public class LdapSearchComponent {
         return results;
     }
 
+    public List<String> search(String uid) {
+        return search(uid, ldapFilterO);
+    }
 
 }

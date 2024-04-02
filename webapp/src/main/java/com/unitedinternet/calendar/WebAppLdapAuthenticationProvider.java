@@ -1,5 +1,6 @@
 package com.unitedinternet.calendar;
 
+import com.unitedinternet.calendar.ldap.LdapSearchComponent;
 import com.unitedinternet.calendar.utils.EmailValidator;
 import com.unitedinternet.calendar.utils.RandomStringGenerator;
 import org.slf4j.Logger;
@@ -21,6 +22,8 @@ import org.unitedinternet.cosmo.model.EntityFactory;
 import org.unitedinternet.cosmo.model.User;
 import org.unitedinternet.cosmo.service.UserService;
 
+import java.util.List;
+
 @Primary
 @Component
 @Transactional
@@ -33,23 +36,28 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
     private final LdapContextSource ldapContextSource;
     private final EmailValidator emailValidator;
     private final RandomStringGenerator randomStringGenerator;
+    private final LdapSearchComponent ldapSearchComponent;
 
-    @Value("${ldap.auth.pattern}")
-    private String ldapPattern;
+    @Value("${ldap.auth.base}")
+    private String ldapAuthBase;
+    @Value("${ldap.auth.user.pattern}")
+    private String ldapAuthUserPattern;
 
-    public WebAppLdapAuthenticationProvider(UserService userService, EntityFactory entityFactory, LdapContextSource ldapContextSource, EmailValidator emailValidator, RandomStringGenerator randomStringGenerator) {
+    public WebAppLdapAuthenticationProvider(UserService userService, EntityFactory entityFactory, LdapContextSource ldapContextSource, EmailValidator emailValidator, RandomStringGenerator randomStringGenerator, LdapSearchComponent ldapSearchComponent) {
         this.userService = userService;
         this.entityFactory = entityFactory;
         this.ldapContextSource = ldapContextSource;
         this.emailValidator = emailValidator;
         this.randomStringGenerator = randomStringGenerator;
+        this.ldapSearchComponent = ldapSearchComponent;
     }
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
         BindAuthenticator bindAuthenticator = new BindAuthenticator(ldapContextSource);
-        String [] patterns = {ldapPattern};
+        String [] patterns = {ldapAuthUserPattern+","+ldapAuthBase};
+
         bindAuthenticator.setUserDnPatterns(patterns);
         LdapAuthenticationProvider ldapAuthenticationProvider = new LdapAuthenticationProvider(bindAuthenticator);
 
@@ -60,7 +68,18 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 //        LdapUserDetails ldapUserDetails = (LdapUserDetails) ldapAuthentication.getPrincipal();
 //        LOGGER.info("DN: " + ldapUserDetails.getDn());
 //        LOGGER.info("UserName: " + ldapUserDetails.getUsername());
-        String email = userName;
+        String email;
+        if(emailValidator.checkEmail(userName)){
+            email = userName;
+        } else{
+            List<String> emails = ldapSearchComponent.search(userName);
+            if(emails.isEmpty()){
+                LOGGER.error("[AUTH] Email address is not found for user: {}", userName);
+                return null;
+            }
+            email = emails.get(0);
+        }
+
         if(!emailValidator.checkEmail(email)){
             LOGGER.error("[AUTH] Email address is not valid: {}", email);
             return null;
@@ -85,7 +104,7 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
             LOGGER.info("[AUTH] Found user with email address: {}", user.getEmail());
             return user;
         }
-        LOGGER.info("[AUTH] No user found for email address: {}. Creating one...", userName);
+        LOGGER.info("[AUTH] No user found for uid address: {}. Creating one...", userName);
         user = this.entityFactory.createUser();
         user.setUsername(userName);
         user.setEmail(email);
