@@ -85,6 +85,9 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
             return null;
         }
         User user = this.createUserIfNotPresent(userName,email);
+        if(user == null){
+            return null;
+        }
         return new UsernamePasswordAuthenticationToken(
                 new CosmoUserDetails(user),
                 authentication.getCredentials(),
@@ -111,7 +114,12 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
         user.setFirstName(userName);
         user.setLastName(userName);
         user.setPassword(randomStringGenerator.generatePassword(16));
-        user = this.userService.createUser(user);
+        try {
+            user = this.userService.createUser(user);
+        }catch (Exception e){
+            LOGGER.info("[AUTH] Can't create new user "+ e.getMessage());
+            return null;
+        }
         return user;
     }
 }
