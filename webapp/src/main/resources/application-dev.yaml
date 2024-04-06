@@ -94,9 +94,9 @@ ldap:
     user:
       pattern: uid={0}
   email:
-    filter:
-      o: kempo.eu
+    filter: (&(sendmailMTAMapValue=%u)(o=%o))
     base: ou=other,ou=services,dc=me,dc=local
+    search-scope: SUBTREE
     attribute: sendmailMTAKey
 
 management:

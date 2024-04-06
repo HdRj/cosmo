@@ -34,14 +34,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${spring.security.enable-cors}")
     private Boolean enableCors;
 
-    @Value("${ldap.email.filter.o}")
-    private String ldapFilterO;
+    @Value("${ldap.email.filter}")
+    private String ldapFilter;
 
     @Value("${ldap.email.base}")
     private String ldapBase;
 
     @Value("${ldap.email.attribute}")
     private String ldapAttribute;
+
+    @Value("${ldap.email.search-scope}")
+    private String searchScope;
 
     private final UserService userService;
     private final EntityFactory entityFactory;
@@ -100,7 +103,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 contextSource(),
                 emailValidator,
                 randomStringGenerator,
-                new LdapSearchComponent(ldapFilterO, ldapBase, ldapAttribute, ldapTemplate())
+                new LdapSearchComponent(ldapFilter, ldapBase, ldapAttribute, searchScope, ldapTemplate())
         );
     }
 

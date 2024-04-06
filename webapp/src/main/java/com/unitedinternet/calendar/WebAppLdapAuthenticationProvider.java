@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
+import org.springframework.ldap.core.DirContextAdapter;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,6 +16,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.ldap.authentication.BindAuthenticator;
 import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
 import org.springframework.security.ldap.userdetails.LdapUserDetails;
+import org.springframework.security.ldap.userdetails.LdapUserDetailsImpl;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.unitedinternet.cosmo.acegisecurity.userdetails.CosmoUserDetails;
@@ -23,6 +25,7 @@ import org.unitedinternet.cosmo.model.User;
 import org.unitedinternet.cosmo.service.UserService;
 
 import java.util.List;
+import java.util.Map;
 
 @Primary
 @Component
@@ -65,14 +68,20 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 
         String userName = ldapAuthentication.getName();
 
-//        LdapUserDetails ldapUserDetails = (LdapUserDetails) ldapAuthentication.getPrincipal();
+        LdapUserDetails ldapUserDetails = (LdapUserDetails) ldapAuthentication.getPrincipal();
+
+        String organization = ldapSearchComponent.getOrganization(ldapUserDetails.getDn());
+        LOGGER.info("o: " + organization);
+
 //        LOGGER.info("DN: " + ldapUserDetails.getDn());
 //        LOGGER.info("UserName: " + ldapUserDetails.getUsername());
+//        LOGGER.info("All: " + ldapUserDetails);
+
         String email;
         if(emailValidator.checkEmail(userName)){
             email = userName;
         } else{
-            List<String> emails = ldapSearchComponent.search(userName);
+            List<String> emails = ldapSearchComponent.search(userName,organization);
             if(emails.isEmpty()){
                 LOGGER.error("[AUTH] Email address is not found for user: {}", userName);
                 return null;
