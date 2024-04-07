@@ -11,8 +11,6 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.ldap.authentication.BindAuthenticator;
-import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.unitedinternet.cosmo.model.EntityFactory;
@@ -26,7 +24,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${ldap.urls}")
     private String ldapUrls;
     @Value("${ldap.manager.username}")
-    private String ldapParameters;
+    private String ldapUserDn;
+    @Value("${ldap.manager.password}")
+    private String ldapPassword;
     @Value("${spring.security.enable-csrf}")
     private Boolean enableCSRF;
     @Value("${spring.security.enable-cors}")
@@ -76,6 +76,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public LdapContextSource contextSource() {
         LdapContextSource ldapContextSource = new LdapContextSource();
         ldapContextSource.setUrl(ldapUrls);
+        //ldapContextSource.setUserDn(ldapUserDn);
+        //ldapContextSource.setPassword(ldapPassword);
         return ldapContextSource;
     }
 

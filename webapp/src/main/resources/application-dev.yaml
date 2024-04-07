@@ -87,7 +87,7 @@ ldap:
   urls: ldap://127.0.0.1:8442
   manager:
     username: cn=calendar,ou=hosts,dc=me,dc=local
-    password:
+    password: xxx
   auth:
     base: ou=accounts,ou=caldav,ou=services,dc=me,dc=local
     user:
