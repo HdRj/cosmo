@@ -84,8 +84,7 @@ mariaDB4j:
   port: 3306
 
 ldap:
-  port: 8442
-  host: ldap://127.0.0.1
+  urls: ldap://127.0.0.1:8442
   manager:
     username: cn=calendar,ou=hosts,dc=me,dc=local
     password:

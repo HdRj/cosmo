@@ -23,10 +23,8 @@ import org.unitedinternet.cosmo.service.UserService;
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Value("${ldap.port}")
-    private String ldapPort;
-    @Value("${ldap.host}")
-    private String ldapHost;
+    @Value("${ldap.urls}")
+    private String ldapUrls;
     @Value("${ldap.manager.username}")
     private String ldapParameters;
     @Value("${spring.security.enable-csrf}")
@@ -77,7 +75,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public LdapContextSource contextSource() {
         LdapContextSource ldapContextSource = new LdapContextSource();
-        ldapContextSource.setUrl(ldapHost+":" + ldapPort);
+        ldapContextSource.setUrl(ldapUrls);
         return ldapContextSource;
     }
 
