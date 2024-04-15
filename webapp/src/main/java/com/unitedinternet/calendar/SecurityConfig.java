@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.unitedinternet.cosmo.model.EntityFactory;
 import org.unitedinternet.cosmo.service.UserService;
 
+import java.util.Collections;
+
 
 @Configuration
 @EnableWebSecurity
@@ -23,9 +25,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Value("${ldap.urls}")
     private String ldapUrls;
-    @Value("${ldap.manager.username}")
+    @Value("${ldap.auth.manager.username:#{null}}")
     private String ldapUserDn;
-    @Value("${ldap.manager.password}")
+    @Value("${ldap.auth.manager.password:#{null}}")
     private String ldapPassword;
     @Value("${spring.security.enable-csrf}")
     private Boolean enableCSRF;
@@ -43,6 +45,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Value("${ldap.email.search-scope}")
     private String searchScope;
+
+    @Value("${ldap.tls-reqcert}")
+    private String ldapTlsReqcert;
 
     private final UserService userService;
     private final EntityFactory entityFactory;
@@ -76,8 +81,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public LdapContextSource contextSource() {
         LdapContextSource ldapContextSource = new LdapContextSource();
         ldapContextSource.setUrl(ldapUrls);
-        //ldapContextSource.setUserDn(ldapUserDn);
-        //ldapContextSource.setPassword(ldapPassword);
+        System.out.println("USER+DN::" + ldapUserDn);
+        System.out.println("PASS::" + ldapPassword);
+        if(ldapUserDn!=null && !ldapUserDn.isEmpty()) {
+            System.out.println("USER+DN::" + ldapUserDn);
+            ldapContextSource.setUserDn(ldapUserDn);
+            ldapContextSource.setPassword(ldapPassword);
+        }
+        ldapContextSource.setBaseEnvironmentProperties(
+                Collections.singletonMap("java.naming.ldap.attributes.binary", "tls_reqcert="+ldapTlsReqcert)
+        );
         return ldapContextSource;
     }
 

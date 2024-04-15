@@ -84,15 +84,22 @@ mariaDB4j:
   port: 3306
 
 ldap:
-  urls: ldap://127.0.0.1:8442
-  manager:
-    username: cn=calendar,ou=hosts,dc=me,dc=local
-    password: xxx
+  urls:
+  tls-reqcert: never
   auth:
+    manager:
+      username: ~
+      password: ~
     base: ou=accounts,ou=caldav,ou=services,dc=me,dc=local
     user:
       pattern: uid={0}
+    search-scope: BASE
+    filter: (&(objectClass=account)(uid=%u))
+    attribute: uid,o
   email:
+    manager:
+      username: cn=calendar,ou=hosts,dc=me,dc=local
+      password: xxx
     filter: (&(sendmailMTAMapValue=%u)(o=%o))
     base: ou=other,ou=services,dc=me,dc=local
     search-scope: SUBTREE
@@ -112,6 +119,6 @@ logging:
   level:
     org:
       springframework:
-#        security: DEBUG
-#        ldap: DEBUG
+        security: DEBUG
+        ldap: DEBUG
 

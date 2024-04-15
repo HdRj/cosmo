@@ -62,6 +62,7 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
         String [] patterns = {ldapAuthUserPattern+","+ldapAuthBase};
 
         bindAuthenticator.setUserDnPatterns(patterns);
+
         LdapAuthenticationProvider ldapAuthenticationProvider = new LdapAuthenticationProvider(bindAuthenticator);
 
         Authentication ldapAuthentication = ldapAuthenticationProvider.authenticate(authentication);
@@ -69,9 +70,6 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
         String userName = ldapAuthentication.getName();
 
         LdapUserDetails ldapUserDetails = (LdapUserDetails) ldapAuthentication.getPrincipal();
-
-        String organization = ldapSearchComponent.getOrganization(ldapUserDetails.getDn());
-        LOGGER.info("o: " + organization);
 
 //        LOGGER.info("DN: " + ldapUserDetails.getDn());
 //        LOGGER.info("UserName: " + ldapUserDetails.getUsername());
@@ -81,6 +79,8 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
         if(emailValidator.checkEmail(userName)){
             email = userName;
         } else{
+            String organization = ldapSearchComponent.getOrganization(ldapUserDetails.getDn());
+            LOGGER.info("o: " + organization);
             List<String> emails = ldapSearchComponent.search(userName,organization);
             if(emails.isEmpty()){
                 LOGGER.error("[AUTH] Email address is not found for user: {}", userName);
@@ -116,6 +116,8 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
             LOGGER.info("[AUTH] Found user with email address: {}", user.getEmail());
             return user;
         }
+
+
         LOGGER.info("[AUTH] No user found for uid address: {}. Creating one...", userName);
         user = this.entityFactory.createUser();
         user.setUsername(userName);
