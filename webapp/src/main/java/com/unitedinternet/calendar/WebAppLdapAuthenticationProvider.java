@@ -75,27 +75,31 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 //        LOGGER.info("UserName: " + ldapUserDetails.getUsername());
 //        LOGGER.info("All: " + ldapUserDetails);
 
-        String email;
-        if(emailValidator.checkEmail(userName)){
-            email = userName;
-        } else{
-            String organization = ldapSearchComponent.getOrganization(ldapUserDetails.getDn());
-            LOGGER.info("o: " + organization);
-            List<String> emails = ldapSearchComponent.search(userName,organization);
-            if(emails.isEmpty()){
-                LOGGER.error("[AUTH] Email address is not found for user: {}", userName);
+        User user = getUser(userName);
+
+        if(user == null) {
+            String email;
+            if (emailValidator.checkEmail(userName)) {
+                email = userName;
+            } else {
+                String organization = ldapSearchComponent.getOrganization(ldapUserDetails.getDn());
+                LOGGER.info("o: " + organization);
+                List<String> emails = ldapSearchComponent.search(userName, organization);
+                if (emails.isEmpty()) {
+                    LOGGER.error("[AUTH] Email address is not found for user: {}", userName);
+                    return null;
+                }
+                email = emails.get(0);
+            }
+
+            if (!emailValidator.checkEmail(email)) {
+                LOGGER.error("[AUTH] Email address is not valid: {}", email);
                 return null;
             }
-            email = emails.get(0);
-        }
-
-        if(!emailValidator.checkEmail(email)){
-            LOGGER.error("[AUTH] Email address is not valid: {}", email);
-            return null;
-        }
-        User user = this.createUserIfNotPresent(userName,email);
-        if(user == null){
-            return null;
+            user = this.createUserIfNotPresent(userName, email);
+            if (user == null) {
+                return null;
+            }
         }
         return new UsernamePasswordAuthenticationToken(
                 new CosmoUserDetails(user),
@@ -110,13 +114,22 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
         return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
     }
 
+    private User getUser(String userName){
+        User user = this.userService.getUser(userName);
+        if (user != null) {
+            LOGGER.info("[AUTH] Found user with email address: {}", user.getEmail());
+            return user;
+        } else {
+            return null;
+        }
+    }
+
     private User createUserIfNotPresent(String userName,String email) {
         User user = this.userService.getUser(userName);
         if (user != null) {
             LOGGER.info("[AUTH] Found user with email address: {}", user.getEmail());
             return user;
         }
-
 
         LOGGER.info("[AUTH] No user found for uid address: {}. Creating one...", userName);
         user = this.entityFactory.createUser();

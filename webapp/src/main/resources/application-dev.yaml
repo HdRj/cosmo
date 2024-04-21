@@ -84,7 +84,7 @@ mariaDB4j:
   port: 3306
 
 ldap:
-  urls:
+  urls: ldaps://127.0.0.1:8443
   tls-reqcert: never
   auth:
     manager:
@@ -119,6 +119,6 @@ logging:
   level:
     org:
       springframework:
-        security: DEBUG
-        ldap: DEBUG
+#        security: DEBUG
+#        ldap: DEBUG
 
