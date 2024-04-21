@@ -81,10 +81,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public LdapContextSource contextSource() {
         LdapContextSource ldapContextSource = new LdapContextSource();
         ldapContextSource.setUrl(ldapUrls);
-        System.out.println("USER+DN::" + ldapUserDn);
-        System.out.println("PASS::" + ldapPassword);
         if(ldapUserDn!=null && !ldapUserDn.isEmpty()) {
-            System.out.println("USER+DN::" + ldapUserDn);
             ldapContextSource.setUserDn(ldapUserDn);
             ldapContextSource.setPassword(ldapPassword);
         }
