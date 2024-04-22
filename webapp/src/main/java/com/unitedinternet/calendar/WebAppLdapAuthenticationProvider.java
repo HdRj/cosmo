@@ -63,6 +63,8 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 
         bindAuthenticator.setUserDnPatterns(patterns);
 
+        bindAuthenticator.setUserAttributes(new String[]{"cn", "uid"});
+
         LdapAuthenticationProvider ldapAuthenticationProvider = new LdapAuthenticationProvider(bindAuthenticator);
 
         Authentication ldapAuthentication = ldapAuthenticationProvider.authenticate(authentication);

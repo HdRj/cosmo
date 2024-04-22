@@ -84,7 +84,7 @@ mariaDB4j:
   port: 3306
 
 ldap:
-  urls: ldaps://127.0.0.1:8443
+  urls: ldaps://127.0.0.1:8442
   tls-reqcert: never
   auth:
     manager:
