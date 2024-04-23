@@ -17,6 +17,7 @@ public class LdapSearchComponent {
     private final String ldapBase;
     private final String ldapAttribute;
     private final String searchScope;
+    private final String countLimit;
 
     private final LdapTemplate ldapTemplate;
 
@@ -25,12 +26,14 @@ public class LdapSearchComponent {
             @Value("${ldap.email.base}") String ldapBase,
             @Value("${ldap.email.attribute}") String ldapAttribute,
             @Value("${ldap.email.search-scope}") String searchScope,
+            @Value("{ldap.email.count-limit}") String countLimit,
             LdapTemplate ldapTemplate
     ) {
         this.ldapFilter = ldapFilter;
         this.ldapBase = ldapBase;
         this.ldapAttribute = ldapAttribute;
         this.searchScope = searchScope;
+        this.countLimit = countLimit;
         this.ldapTemplate = ldapTemplate;
     }
 
@@ -39,6 +42,10 @@ public class LdapSearchComponent {
         String filter = ldapFilter.replace("%u",uid).replace("%o",oValue);
 
         SearchControls controls = new SearchControls();
+
+        controls.setCountLimit(Long.parseLong(countLimit));
+        controls.setReturningAttributes(new String[] {ldapAttribute});
+
         if(searchScope=="ONE"){
             controls.setSearchScope(SearchControls.ONELEVEL_SCOPE);
         }else {

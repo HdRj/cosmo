@@ -46,6 +46,7 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
     @Value("${ldap.auth.user.pattern}")
     private String ldapAuthUserPattern;
 
+
     public WebAppLdapAuthenticationProvider(UserService userService, EntityFactory entityFactory, LdapContextSource ldapContextSource, EmailValidator emailValidator, RandomStringGenerator randomStringGenerator, LdapSearchComponent ldapSearchComponent) {
         this.userService = userService;
         this.entityFactory = entityFactory;

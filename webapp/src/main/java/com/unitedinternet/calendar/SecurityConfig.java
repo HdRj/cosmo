@@ -46,6 +46,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${ldap.email.search-scope}")
     private String searchScope;
 
+    @Value("${ldap.email.count-limit}")
+    private String countLimit;
+
     @Value("${ldap.tls-reqcert}")
     private String ldapTlsReqcert;
 
@@ -113,7 +116,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 contextSource(),
                 emailValidator,
                 randomStringGenerator,
-                new LdapSearchComponent(ldapFilter, ldapBase, ldapAttribute, searchScope, ldapTemplate())
+                new LdapSearchComponent(ldapFilter, ldapBase, ldapAttribute, searchScope, countLimit, ldapTemplate())
         );
     }
 

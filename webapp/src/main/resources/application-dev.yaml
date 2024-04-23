@@ -84,7 +84,7 @@ mariaDB4j:
   port: 3306
 
 ldap:
-  urls: ldaps://127.0.0.1:8442
+  urls: ldap://127.0.0.1:8442
   tls-reqcert: never
   auth:
     manager:
@@ -104,6 +104,7 @@ ldap:
     base: ou=other,ou=services,dc=me,dc=local
     search-scope: SUBTREE
     attribute: sendmailMTAKey
+    count-limit: 1
 
 management:
   endpoints:
