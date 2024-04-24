@@ -80,6 +80,7 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 //        LOGGER.info("UserName: " + ldapUserDetails.getUsername());
 //        LOGGER.info("All: " + ldapUserDetails);
 
+        //get cosmo user
         User user = getUser(userName);
 
         if(user == null) {

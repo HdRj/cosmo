@@ -87,6 +87,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         if(ldapUserDn!=null && !ldapUserDn.isEmpty()) {
             ldapContextSource.setUserDn(ldapUserDn);
             ldapContextSource.setPassword(ldapPassword);
+        }else {
+            ldapContextSource.setAnonymousReadOnly(true);
+            ldapContextSource.afterPropertiesSet();
         }
         ldapContextSource.setBaseEnvironmentProperties(
                 Collections.singletonMap("java.naming.ldap.attributes.binary", "tls_reqcert="+ldapTlsReqcert)
