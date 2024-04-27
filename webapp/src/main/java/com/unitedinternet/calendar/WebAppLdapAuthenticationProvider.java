@@ -29,6 +29,9 @@ import org.unitedinternet.cosmo.service.UserService;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
+import javax.naming.ldap.Control;
+import javax.naming.ldap.InitialLdapContext;
+import javax.naming.ldap.LdapContext;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +49,8 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
     private final EmailValidator emailValidator;
     private final RandomStringGenerator randomStringGenerator;
     private final LdapSearchComponent ldapSearchComponent;
+
+    private DirContext context;
 
     @Value("${ldap.auth.base}")
     private String ldapAuthBase;
@@ -69,13 +74,11 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
         String ldapUrl = ldapUrls.split(" ")[1];
-        //LOGGER.info("URL: " + ldapUrl);
 
         String userName = authentication.getName();
 
         String ldapUser = "uid="+userName+","+ldapAuthBase;
         String ldapPassword = authentication.getCredentials().toString();
-        //LOGGER.info("PASS: " + ldapPassword);
 
         Hashtable<String, String> env = new Hashtable<>();
         env.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
@@ -88,21 +91,49 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 
         env.put("java.naming.security.authentication", "simple");
 
-        DirContext context = null;
+
         try {
             context = new InitialDirContext(env);
             LOGGER.info("LDAP bind successful...");
-        } catch (NamingException e) {
-            LOGGER.error("LDAP bind failed...");
-        } finally {
-            if (context != null) {
-                try {
-                    context.close();
-                } catch (NamingException e) {
-                    LOGGER.error(e.getMessage());
+
+            User user = getUser(userName);
+
+            if(user == null) {
+                String email;
+                if (emailValidator.checkEmail(userName)) {
+                    email = userName;
+                } else {
+                    String organization = "kempo.eu";//ldapSearchComponent.getOrganization(ldapUserDetails.getDn());
+                    LOGGER.info("o: " + organization);
+                    List<String> emails = ldapSearchComponent.search(userName, organization);
+                    if (emails.isEmpty()) {
+                        LOGGER.error("[AUTH] Email address is not found for user: {}", userName);
+                        return null;
+                    }
+                    email = emails.get(0);
+                }
+
+                if (!emailValidator.checkEmail(email)) {
+                    LOGGER.error("[AUTH] Email address is not valid: {}", email);
+                    return null;
+                }
+                user = this.createUserIfNotPresent(userName, email);
+                if (user == null) {
+                    return null;
                 }
             }
+            return new UsernamePasswordAuthenticationToken(
+                    new CosmoUserDetails(user),
+                    authentication.getCredentials(),
+                    authentication.getAuthorities()
+            );
+
+        } catch (NamingException e) {
+            LOGGER.error("LDAP bind failed...");
+            e.printStackTrace();
+            return null;
         }
+
 
         /*BindAuthenticator bindAuthenticator = new BindAuthenticator(ldapContextSource);
         String [] patterns = {ldapAuthUserPattern+","+ldapAuthBase};
@@ -124,14 +155,14 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 //        LOGGER.info("All: " + ldapUserDetails);
 
         //get cosmo user
-        User user = getUser(userName);
+        /*User user = getUser(userName);
 
         if(user == null) {
             String email;
             if (emailValidator.checkEmail(userName)) {
                 email = userName;
             } else {
-                String organization = "kempo.eu";//ldapSearchComponent.getOrganization(ldapUserDetails.getDn());
+                String organization = ldapSearchComponent.getOrganization(ldapUserDetails.getDn());
                 LOGGER.info("o: " + organization);
                 List<String> emails = ldapSearchComponent.search(userName, organization);
                 if (emails.isEmpty()) {
@@ -154,7 +185,7 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
                 new CosmoUserDetails(user),
                 authentication.getCredentials(),
                 authentication.getAuthorities()
-        );
+        );*/
 
     }
 
