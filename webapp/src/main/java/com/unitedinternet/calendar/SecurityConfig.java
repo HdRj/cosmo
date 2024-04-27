@@ -13,6 +13,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.unitedinternet.cosmo.model.EntityFactory;
 import org.unitedinternet.cosmo.service.UserService;
 
@@ -79,28 +81,32 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .httpBasic();
     }
 
-
     @Bean
-    public LdapContextSource contextSource() {
-        LdapContextSource ldapContextSource = new LdapContextSource();
-        ldapContextSource.setUrl(ldapUrls);
-        if(ldapUserDn!=null && !ldapUserDn.isEmpty()) {
-            ldapContextSource.setUserDn(ldapUserDn);
-            ldapContextSource.setPassword(ldapPassword);
-        }else {
-            ldapContextSource.setAnonymousReadOnly(true);
-            ldapContextSource.afterPropertiesSet();
-        }
-        ldapContextSource.setBaseEnvironmentProperties(
-                Collections.singletonMap("java.naming.ldap.attributes.binary", "tls_reqcert="+ldapTlsReqcert)
-        );
-        return ldapContextSource;
+    public PasswordEncoder passwordEncoder() {
+        return NoOpPasswordEncoder.getInstance();
     }
 
-    @Bean
-    public LdapTemplate ldapTemplate() {
-        return new LdapTemplate(contextSource());
-    }
+//    @Bean
+//    public LdapContextSource contextSource() {
+//        LdapContextSource ldapContextSource = new LdapContextSource();
+//        ldapContextSource.setUrl(ldapUrls);
+//        if(ldapUserDn!=null && !ldapUserDn.isEmpty()) {
+//            ldapContextSource.setUserDn(ldapUserDn);
+//            ldapContextSource.setPassword(ldapPassword);
+//        }else {
+//            ldapContextSource.setAnonymousReadOnly(true);
+//            ldapContextSource.afterPropertiesSet();
+//        }
+//        ldapContextSource.setBaseEnvironmentProperties(
+//                Collections.singletonMap("java.naming.ldap.attributes.binary", "tls_reqcert="+ldapTlsReqcert)
+//        );
+//        return ldapContextSource;
+//    }
+
+//    @Bean
+//    public LdapTemplate ldapTemplate() {
+//        return new LdapTemplate(contextSource());
+//    }
 
 //    @Override
 //    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -116,10 +122,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         return new WebAppLdapAuthenticationProvider(
                 userService,
                 entityFactory,
-                contextSource(),
+                null,//contextSource(),
                 emailValidator,
                 randomStringGenerator,
-                new LdapSearchComponent(ldapFilter, ldapBase, ldapAttribute, searchScope, countLimit, ldapTemplate())
+                null//new LdapSearchComponent(ldapFilter, ldapBase, ldapAttribute, searchScope, countLimit, ldapTemplate())
         );
     }
 
