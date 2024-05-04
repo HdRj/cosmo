@@ -1,24 +1,19 @@
 package com.unitedinternet.calendar;
 
+import com.unitedinternet.calendar.ldap.LdapBindComponent;
 import com.unitedinternet.calendar.ldap.LdapSearchComponent;
+import com.unitedinternet.calendar.ldap.LdapSpringSearchComponent;
 import com.unitedinternet.calendar.utils.EmailValidator;
 import com.unitedinternet.calendar.utils.RandomStringGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
-import org.springframework.ldap.core.DirContextAdapter;
-import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.ldap.authentication.BindAuthenticator;
-import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
-import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
-import org.springframework.security.ldap.userdetails.LdapUserDetails;
-import org.springframework.security.ldap.userdetails.LdapUserDetailsImpl;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.unitedinternet.cosmo.acegisecurity.userdetails.CosmoUserDetails;
@@ -29,15 +24,9 @@ import org.unitedinternet.cosmo.service.UserService;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
-import javax.naming.ldap.Control;
-import javax.naming.ldap.InitialLdapContext;
-import javax.naming.ldap.LdapContext;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 
-@Primary
-@Component
 @Transactional
 public class WebAppLdapAuthenticationProvider implements AuthenticationProvider {
 
@@ -45,126 +34,43 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 
     private final UserService userService;
     private final EntityFactory entityFactory;
-    private final LdapContextSource ldapContextSource;
     private final EmailValidator emailValidator;
     private final RandomStringGenerator randomStringGenerator;
     private final LdapSearchComponent ldapSearchComponent;
-
-    private DirContext context;
-
-    @Value("${ldap.auth.base}")
+    private final LdapBindComponent ldapBindComponent;
     private String ldapAuthBase;
-    @Value("${ldap.auth.user.pattern}")
-    private String ldapAuthUserPattern;
 
-    @Value("${ldap.urls}")
-    private String ldapUrls;
-
-
-    public WebAppLdapAuthenticationProvider(UserService userService, EntityFactory entityFactory, LdapContextSource ldapContextSource, EmailValidator emailValidator, RandomStringGenerator randomStringGenerator, LdapSearchComponent ldapSearchComponent) {
+    public WebAppLdapAuthenticationProvider(UserService userService, EntityFactory entityFactory, EmailValidator emailValidator, RandomStringGenerator randomStringGenerator, LdapSearchComponent ldapSearchComponent, LdapBindComponent ldapBindComponent, String ldapAuthBase) {
         this.userService = userService;
         this.entityFactory = entityFactory;
-        this.ldapContextSource = ldapContextSource;
         this.emailValidator = emailValidator;
         this.randomStringGenerator = randomStringGenerator;
         this.ldapSearchComponent = ldapSearchComponent;
+        this.ldapBindComponent = ldapBindComponent;
+        this.ldapAuthBase = ldapAuthBase;
     }
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
-        String ldapUrl = ldapUrls.split(" ")[1];
-
         String userName = authentication.getName();
 
-        String ldapUser = "uid="+userName+","+ldapAuthBase;
-        String ldapPassword = authentication.getCredentials().toString();
+        DirContext context = ldapBindComponent.connect(authentication);
 
-        Hashtable<String, String> env = new Hashtable<>();
-        env.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        env.put(javax.naming.Context.PROVIDER_URL, ldapUrl);
-        env.put(javax.naming.Context.SECURITY_AUTHENTICATION, "simple");
-        env.put(javax.naming.Context.SECURITY_PRINCIPAL, ldapUser);
-        env.put(javax.naming.Context.SECURITY_CREDENTIALS, ldapPassword);
-
-        env.put("java.naming.ldap.version", "3");
-
-        env.put("java.naming.security.authentication", "simple");
-
-
-        try {
-            context = new InitialDirContext(env);
-            LOGGER.info("LDAP bind successful...");
-
-            User user = getUser(userName);
-
-            if(user == null) {
-                String email;
-                if (emailValidator.checkEmail(userName)) {
-                    email = userName;
-                } else {
-                    String organization = "kempo.eu";//ldapSearchComponent.getOrganization(ldapUserDetails.getDn());
-                    LOGGER.info("o: " + organization);
-                    List<String> emails = ldapSearchComponent.search(userName, organization);
-                    if (emails.isEmpty()) {
-                        LOGGER.error("[AUTH] Email address is not found for user: {}", userName);
-                        return null;
-                    }
-                    email = emails.get(0);
-                }
-
-                if (!emailValidator.checkEmail(email)) {
-                    LOGGER.error("[AUTH] Email address is not valid: {}", email);
-                    return null;
-                }
-                user = this.createUserIfNotPresent(userName, email);
-                if (user == null) {
-                    return null;
-                }
-            }
-            return new UsernamePasswordAuthenticationToken(
-                    new CosmoUserDetails(user),
-                    authentication.getCredentials(),
-                    authentication.getAuthorities()
-            );
-
-        } catch (NamingException e) {
-            LOGGER.error("LDAP bind failed...");
-            e.printStackTrace();
+        if(context == null){
             return null;
         }
 
-
-        /*BindAuthenticator bindAuthenticator = new BindAuthenticator(ldapContextSource);
-        String [] patterns = {ldapAuthUserPattern+","+ldapAuthBase};
-
-        bindAuthenticator.setUserDnPatterns(patterns);
-
-        bindAuthenticator.setUserAttributes(new String[]{});
-
-        LdapAuthenticationProvider ldapAuthenticationProvider = new LdapAuthenticationProvider(bindAuthenticator);
-
-        Authentication ldapAuthentication = ldapAuthenticationProvider.authenticate(authentication);
-
-        String userName = ldapAuthentication.getName();
-
-        LdapUserDetails ldapUserDetails = (LdapUserDetails) ldapAuthentication.getPrincipal();*/
-
-//        LOGGER.info("DN: " + ldapUserDetails.getDn());
-//        LOGGER.info("UserName: " + ldapUserDetails.getUsername());
-//        LOGGER.info("All: " + ldapUserDetails);
-
-        //get cosmo user
-        /*User user = getUser(userName);
+        User user = getUser(userName);
 
         if(user == null) {
             String email;
             if (emailValidator.checkEmail(userName)) {
                 email = userName;
             } else {
-                String organization = ldapSearchComponent.getOrganization(ldapUserDetails.getDn());
+                String organization = ldapSearchComponent.getOrganization("uid="+userName+","+ldapAuthBase,context);
                 LOGGER.info("o: " + organization);
-                List<String> emails = ldapSearchComponent.search(userName, organization);
+                List<String> emails = ldapSearchComponent.search(userName, organization,context);
                 if (emails.isEmpty()) {
                     LOGGER.error("[AUTH] Email address is not found for user: {}", userName);
                     return null;
@@ -185,8 +91,7 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
                 new CosmoUserDetails(user),
                 authentication.getCredentials(),
                 authentication.getAuthorities()
-        );*/
-
+        );
     }
 
     @Override

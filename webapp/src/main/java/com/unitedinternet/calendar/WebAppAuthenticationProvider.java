@@ -29,7 +29,7 @@ import java.security.MessageDigest;
  *
  */
 //@Primary
-@Component
+@Deprecated
 @Transactional
 public class WebAppAuthenticationProvider implements AuthenticationProvider {
 
