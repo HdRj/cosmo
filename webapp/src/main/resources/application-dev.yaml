@@ -82,7 +82,7 @@ mariaDB4j:
   port: 3306
 
 ldap:
-  urls: ldap://127.0.0.1:8442
+  urls: ldaps://87.233.156.156:8443, ldap://87.233.156.156:8442
   tls-reqcert: never
   auth:
     manager:
@@ -96,8 +96,8 @@ ldap:
     attribute: uid,o
   email:
     manager:
-      username: cn=calendar,ou=hosts,dc=me,dc=local
-      password: xxx
+      username: ~
+      password: ~
     filter: (&(sendmailMTAMapValue=%u)(o=%o))
     base: ou=other,ou=services,dc=me,dc=local
     search-scope: SUBTREE

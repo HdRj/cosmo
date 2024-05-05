@@ -34,8 +34,8 @@ public class LdapBindComponent {
             @Value("${ldap.auth.base}") String ldapAuthBase,
             @Value("${ldap.auth.user.pattern}") String ldapAuthUserPattern,
             @Value("${ldap.urls}") String ldapUrls,
-            @Value("${ldap.auth.manager.username:#{null}}") String managerUsername,
-            @Value("${ldap.auth.manager.password:#{null}}") String managerPassword,
+            @Value("${ldap.email.manager.username:#{null}}") String managerUsername,
+            @Value("${ldap.email.manager.password:#{null}}") String managerPassword,
             @Value("${ldap.tls-reqcert}") String ldapTlsReqcert
     ) {
         this.ldapAuthBase = ldapAuthBase;
@@ -50,12 +50,13 @@ public class LdapBindComponent {
 
         String userName = authentication.getName();
         String password = authentication.getCredentials().toString();
-        if(managerUsername !=null && !managerUsername.isEmpty()) {
-            userName = managerUsername;
-            password = managerPassword;
-        }
 
         String ldapUser = ldapAuthUserPattern.replace("{0}",userName)+","+ldapAuthBase;
+
+        if(managerUsername !=null && !managerUsername.isEmpty()) {
+            ldapUser = managerUsername;
+            password = managerPassword;
+        }
 
         Hashtable<String, String> env = new Hashtable<>();
         env.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");

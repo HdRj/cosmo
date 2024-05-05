@@ -31,8 +31,20 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
     private final LdapSearchComponent ldapSearchComponent;
     private final LdapBindComponent ldapBindComponent;
     private String ldapAuthBase;
+    private String managerAuthUsername;
+    private String managerAuthPassword;
 
-    public WebAppLdapAuthenticationProvider(UserService userService, EntityFactory entityFactory, EmailValidator emailValidator, RandomStringGenerator randomStringGenerator, LdapSearchComponent ldapSearchComponent, LdapBindComponent ldapBindComponent, String ldapAuthBase) {
+    public WebAppLdapAuthenticationProvider(
+            UserService userService,
+            EntityFactory entityFactory,
+            EmailValidator emailValidator,
+            RandomStringGenerator randomStringGenerator,
+            LdapSearchComponent ldapSearchComponent,
+            LdapBindComponent ldapBindComponent,
+            String ldapAuthBase,
+            String managerAuthUsername,
+            String managerAuthPassword
+    ) {
         this.userService = userService;
         this.entityFactory = entityFactory;
         this.emailValidator = emailValidator;
@@ -40,6 +52,8 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
         this.ldapSearchComponent = ldapSearchComponent;
         this.ldapBindComponent = ldapBindComponent;
         this.ldapAuthBase = ldapAuthBase;
+        this.managerAuthUsername = managerAuthUsername;
+        this.managerAuthPassword = managerAuthPassword;
     }
 
     @Override
@@ -51,6 +65,10 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 
         if(context == null){
             return null;
+        }
+
+        if(managerAuthUsername !=null && !managerAuthUsername.isEmpty()) {
+            userName = managerAuthUsername;
         }
 
         User user = getUser(userName);

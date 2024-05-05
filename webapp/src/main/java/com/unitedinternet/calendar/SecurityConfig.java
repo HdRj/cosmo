@@ -28,6 +28,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private Boolean enableCors;
     @Value("${ldap.auth.base}")
     private String ldapAuthBase;
+    @Value("${ldap.auth.manager.username:#{null}}")
+    String managerAuthUsername;
+    @Value("${ldap.auth.manager.password:#{null}}")
+    String managerAuthPassword;
 
 
     private final UserService userService;
@@ -106,7 +110,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 randomStringGenerator,
                 ldapSearchComponent,
                 ldapBindComponent,
-                ldapAuthBase
+                ldapAuthBase,
+                managerAuthUsername,
+                managerAuthPassword
         );
     }
 

@@ -96,8 +96,8 @@ ldap:
     attribute: uid,o
   email:
     manager:
-      username: cn=calendar,ou=hosts,dc=me,dc=local
-      password: xxx
+      username: ~
+      password: ~
     filter: (&(sendmailMTAMapValue=%u)(o=%o))
     base: ou=other,ou=services,dc=me,dc=local
     search-scope: SUBTREE
