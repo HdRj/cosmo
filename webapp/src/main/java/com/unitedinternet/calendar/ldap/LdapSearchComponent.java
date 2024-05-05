@@ -21,27 +21,31 @@ public class LdapSearchComponent {
 
     private final String ldapFilter;
     private final String ldapBase;
-    private final String ldapAttribute;
+    private final String ldapEmailAttribute;
     private final String searchScope;
     private final String countLimit;
+    private final String ldapAuthAttribute;
 
     public LdapSearchComponent(
             @Value("${ldap.email.filter}") String ldapFilter,
             @Value("${ldap.email.base}") String ldapBase,
-            @Value("${ldap.email.attribute}") String ldapAttribute,
+            @Value("${ldap.email.attribute}") String ldapEmailAttribute,
             @Value("${ldap.email.search-scope}") String searchScope,
-            @Value("${ldap.email.count-limit}") String countLimit
+            @Value("${ldap.email.count-limit}") String countLimit,
+            @Value("${ldap.auth.attribute}") String ldapAuthAttribute
     ) {
         this.ldapFilter = ldapFilter;
         this.ldapBase = ldapBase;
-        this.ldapAttribute = ldapAttribute;
+        this.ldapEmailAttribute = ldapEmailAttribute;
         this.searchScope = searchScope;
         this.countLimit = countLimit;
+        this.ldapAuthAttribute = ldapAuthAttribute;
     }
 
     public String getOrganization(String userDn, DirContext dirContext) {
         SearchControls controls = new SearchControls();
         controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        controls.setReturningAttributes(new String[]{ldapAuthAttribute.split(",")[1]});
 
         try {
             NamingEnumeration<SearchResult> results = dirContext.search(userDn, "(objectclass=*)", controls);
@@ -64,7 +68,7 @@ public class LdapSearchComponent {
 
         SearchControls controls = new SearchControls();
         controls.setCountLimit(Long.parseLong(countLimit));
-        controls.setReturningAttributes(new String[]{ldapAttribute});
+        controls.setReturningAttributes(new String[]{ldapEmailAttribute});
         controls.setSearchScope(searchScope.equals("ONE") ? SearchControls.ONELEVEL_SCOPE : SearchControls.SUBTREE_SCOPE);
 
         List<String> results = new ArrayList<>();
@@ -75,7 +79,7 @@ public class LdapSearchComponent {
             while (searchResults.hasMore()) {
                 SearchResult searchResult = searchResults.next();
                 Attributes attributes = searchResult.getAttributes();
-                results.add((String) attributes.get(ldapAttribute).get());
+                results.add((String) attributes.get(ldapEmailAttribute).get());
             }
         } catch (NamingException e) {
             LOGGER.error("Search exception: {}", e.getMessage());
