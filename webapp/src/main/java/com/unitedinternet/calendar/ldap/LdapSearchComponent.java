@@ -25,6 +25,7 @@ public class LdapSearchComponent {
     private final String searchScope;
     private final String countLimit;
     private final String ldapAuthAttribute;
+    private final String authScope;
 
     public LdapSearchComponent(
             @Value("${ldap.email.filter}") String ldapFilter,
@@ -32,7 +33,8 @@ public class LdapSearchComponent {
             @Value("${ldap.email.attribute}") String ldapEmailAttribute,
             @Value("${ldap.email.search-scope}") String searchScope,
             @Value("${ldap.email.count-limit}") String countLimit,
-            @Value("${ldap.auth.attribute}") String ldapAuthAttribute
+            @Value("${ldap.auth.attribute}") String ldapAuthAttribute,
+            @Value("${ldap.auth.search-scope}") String authScope
     ) {
         this.ldapFilter = ldapFilter;
         this.ldapBase = ldapBase;
@@ -40,11 +42,12 @@ public class LdapSearchComponent {
         this.searchScope = searchScope;
         this.countLimit = countLimit;
         this.ldapAuthAttribute = ldapAuthAttribute;
+        this.authScope = authScope;
     }
 
     public String getOrganization(String userDn, DirContext dirContext) {
         SearchControls controls = new SearchControls();
-        controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        controls.setSearchScope(authScope.equals("ONE") ? SearchControls.ONELEVEL_SCOPE : SearchControls.SUBTREE_SCOPE);
         controls.setReturningAttributes(new String[]{ldapAuthAttribute.split(",")[1]});
 
         try {
