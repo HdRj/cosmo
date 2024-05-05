@@ -47,6 +47,7 @@ external:
     non:
       proxyed:
         hosts:
+    user-agent: MyApplication/1.0
 calendar:
   server:
     productId: COSMO
@@ -54,16 +55,14 @@ calendar:
 server:
   port: 8080
   servlet:
-    context-path: /cosmo
+    context-path: /
 spring:
   application:
-    name: cosmo-webapp
-  profiles:
-    active: local
+    name: webapp
   datasource:
-    url: jdbc:mysql://localhost:33060/test?autoReconnect=true
+    url: jdbc:mysql://localhost:3306/cosmodb?autoReconnect=true
     username: root
-    password:
+    password: aaabbb
     driver-class-name: org.mariadb.jdbc.Driver
     hikari:
       maximum-pool-size: 10
@@ -73,13 +72,51 @@ spring:
       hibernate.cache.use_query_cache: false
       hibernate.cache.use_second_level_cache: false
       hibernate.show_sql: false
-      hibernate.hbm2ddl.auto: create
+      hibernate.hbm2ddl.auto: validate
       hibernate.id.new_generator_mappings: false
+  security:
+    enable-csrf: true
+    enable-cors: true
 
 mariaDB4j:
-  port: 33060
+  port: 3306
 
 ldap:
-  port: 8442
-  host: ldap://127.0.0.1
-  parameters: ou=caldav,ou=services,dc=me,dc=local
+  urls: ldap://127.0.0.1:8442
+  tls-reqcert: never
+  auth:
+    manager:
+      username: ~
+      password: ~
+    base: ou=accounts,ou=caldav,ou=services,dc=me,dc=local
+    user:
+      pattern: uid={0}
+    search-scope: BASE
+    filter: (&(objectClass=account)(uid=%u))
+    attribute: uid,o
+  email:
+    manager:
+      username: cn=calendar,ou=hosts,dc=me,dc=local
+      password: xxx
+    filter: (&(sendmailMTAMapValue=%u)(o=%o))
+    base: ou=other,ou=services,dc=me,dc=local
+    search-scope: SUBTREE
+    attribute: sendmailMTAKey
+    count-limit: 1
+
+management:
+  endpoints:
+    web:
+      base-path: /url
+      exposure:
+        include: "*"
+    endpoint:
+      health:
+        show-details: always
+
+logging:
+  level:
+    org:
+      springframework:
+#        security: DEBUG
+#        ldap: DEBUG
