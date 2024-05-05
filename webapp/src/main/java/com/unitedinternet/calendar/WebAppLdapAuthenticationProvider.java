@@ -16,7 +16,11 @@ import org.unitedinternet.cosmo.model.EntityFactory;
 import org.unitedinternet.cosmo.model.User;
 import org.unitedinternet.cosmo.service.UserService;
 
+import javax.naming.Context;
+import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
+import java.util.Hashtable;
 import java.util.List;
 
 @Transactional
@@ -60,6 +64,8 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 
         String userName = authentication.getName();
+        String password = authentication.getCredentials().toString();
+
 
         DirContext context = ldapBindComponent.connect(authentication);
 
@@ -69,6 +75,14 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 
         if(managerAuthUsername !=null && !managerAuthUsername.isEmpty()) {
             userName = managerAuthUsername;
+            password = managerAuthPassword;
+        }
+
+        try{
+            ldapBindComponent.checkUsernameAndPassword(userName,password);
+        } catch (NamingException e) {
+            LOGGER.error("[Auth] Username and/or password are incorrect");
+            return null;
         }
 
         User user = getUser(userName);
@@ -141,4 +155,6 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
         }
         return user;
     }
+
+
 }

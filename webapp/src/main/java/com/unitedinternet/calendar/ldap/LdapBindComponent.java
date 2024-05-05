@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
@@ -84,5 +85,32 @@ public class LdapBindComponent {
     public DirContext getContext(){
         return context;
     }
+
+
+    public boolean checkUsernameAndPassword(String userName, String password) throws NamingException {
+        String ldapUser = ldapAuthUserPattern.replace("{0}",userName)+","+ldapAuthBase;
+        if(context!=null) {
+            Hashtable<?, ?> env = context.getEnvironment();
+            if (context.getEnvironment().get(javax.naming.Context.SECURITY_PRINCIPAL).equals(ldapUser)) {
+                LOGGER.info("Same user");
+                return true;
+            }
+            Hashtable <String, String> userEnv = (Hashtable<String, String>) env.clone();
+            userEnv.put(javax.naming.Context.SECURITY_PRINCIPAL, ldapUser);
+            userEnv.put(javax.naming.Context.SECURITY_CREDENTIALS, password);
+            context = new InitialDirContext(userEnv);
+            LOGGER.info("New context");
+            context = new InitialDirContext(env);
+            LOGGER.info("Return to old context");
+        }  else {
+            Hashtable<String, String> userEnv = new Hashtable<>();
+            userEnv.put(javax.naming.Context.SECURITY_PRINCIPAL, ldapUser);
+            userEnv.put(javax.naming.Context.SECURITY_CREDENTIALS, password);
+            context = new InitialDirContext(userEnv);
+            LOGGER.info("Create new context");
+        }
+        return true;
+    }
+
 
 }
