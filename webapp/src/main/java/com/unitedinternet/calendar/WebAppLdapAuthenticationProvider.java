@@ -2,29 +2,21 @@ package com.unitedinternet.calendar;
 
 import com.unitedinternet.calendar.ldap.LdapBindComponent;
 import com.unitedinternet.calendar.ldap.LdapSearchComponent;
-import com.unitedinternet.calendar.ldap.LdapSpringSearchComponent;
 import com.unitedinternet.calendar.utils.EmailValidator;
 import com.unitedinternet.calendar.utils.RandomStringGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
-import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.unitedinternet.cosmo.acegisecurity.userdetails.CosmoUserDetails;
 import org.unitedinternet.cosmo.model.EntityFactory;
 import org.unitedinternet.cosmo.model.User;
 import org.unitedinternet.cosmo.service.UserService;
 
-import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
-import javax.naming.directory.InitialDirContext;
-import java.util.Hashtable;
 import java.util.List;
 
 @Transactional
