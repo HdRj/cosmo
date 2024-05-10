@@ -33,7 +33,7 @@ public class LdapBindComponent {
 
     private DirContext managerContext;
     
-    private DirContext userContext;
+    //private DirContext userContext;
 
     public LdapBindComponent(
             @Value("${ldap.auth.base}") String ldapAuthBase,
@@ -56,13 +56,14 @@ public class LdapBindComponent {
     }
 
     public DirContext userConnectByUserDn(String userDn, String password) throws NamingException {
-        if(userContext !=null) {
+        /*if(userContext !=null) {
             if (userContext.getEnvironment().get(javax.naming.Context.SECURITY_PRINCIPAL).equals(userDn)) {
                 LOGGER.info("Same user in connect");
                 return userContext;
             }
-        }
+        }*/
 
+        DirContext userContext;
         Hashtable<String, String> env = new Hashtable<>();
         env.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(javax.naming.Context.PROVIDER_URL, ldapUrls);
