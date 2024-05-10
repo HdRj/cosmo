@@ -110,9 +110,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 randomStringGenerator,
                 ldapSearchComponent,
                 ldapBindComponent,
-                ldapAuthBase,
-                managerAuthUsername,
-                managerAuthPassword
+                ldapAuthBase
         );
     }
 

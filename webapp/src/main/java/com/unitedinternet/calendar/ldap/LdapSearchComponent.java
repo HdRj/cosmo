@@ -20,7 +20,8 @@ public class LdapSearchComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(LdapSearchComponent.class);
 
     private final String ldapFilter;
-    private final String ldapBase;
+    private final String ldapEmailBase;
+    private final String ldapAuthBase;
     private final String ldapEmailAttribute;
     private final String searchScope;
     private final String countLimit;
@@ -29,7 +30,8 @@ public class LdapSearchComponent {
 
     public LdapSearchComponent(
             @Value("${ldap.email.filter}") String ldapFilter,
-            @Value("${ldap.email.base}") String ldapBase,
+            @Value("${ldap.email.base}") String ldapEmailBase,
+            @Value("${ldap.auth.base}") String ldapAuthBase,
             @Value("${ldap.email.attribute}") String ldapEmailAttribute,
             @Value("${ldap.email.search-scope}") String searchScope,
             @Value("${ldap.email.count-limit}") String countLimit,
@@ -37,7 +39,8 @@ public class LdapSearchComponent {
             @Value("${ldap.auth.search-scope}") String authScope
     ) {
         this.ldapFilter = ldapFilter;
-        this.ldapBase = ldapBase;
+        this.ldapEmailBase = ldapEmailBase;
+        this.ldapAuthBase = ldapAuthBase;
         this.ldapEmailAttribute = ldapEmailAttribute;
         this.searchScope = searchScope;
         this.countLimit = countLimit;
@@ -77,12 +80,37 @@ public class LdapSearchComponent {
         List<String> results = new ArrayList<>();
 
         try {
-            NamingEnumeration<SearchResult> searchResults = dirContext.search(ldapBase, filter, controls);
+            NamingEnumeration<SearchResult> searchResults = dirContext.search(ldapEmailBase, filter, controls);
 
             while (searchResults.hasMore()) {
                 SearchResult searchResult = searchResults.next();
                 Attributes attributes = searchResult.getAttributes();
                 results.add((String) attributes.get(ldapEmailAttribute).get());
+            }
+        } catch (NamingException e) {
+            LOGGER.error("Search exception: {}", e.getMessage());
+        }
+
+        return results;
+    }
+
+    public List<String> searchUser(String uid, DirContext dirContext, String attribute) {
+
+        String filter = "(uid="+uid+")";
+
+        SearchControls controls = new SearchControls();
+        controls.setCountLimit(Long.parseLong(countLimit));
+        controls.setReturningAttributes(new String[]{attribute});
+        controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+
+        List<String> results = new ArrayList<>();
+
+        try {
+            NamingEnumeration<SearchResult> searchResults = dirContext.search(ldapAuthBase, filter, controls);
+
+            while (searchResults.hasMore()) {
+                SearchResult searchResult = searchResults.next();
+                results.add(searchResult.getNameInNamespace());
             }
         } catch (NamingException e) {
             LOGGER.error("Search exception: {}", e.getMessage());

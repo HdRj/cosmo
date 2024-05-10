@@ -16,11 +16,8 @@ import org.unitedinternet.cosmo.model.EntityFactory;
 import org.unitedinternet.cosmo.model.User;
 import org.unitedinternet.cosmo.service.UserService;
 
-import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
-import javax.naming.directory.InitialDirContext;
-import java.util.Hashtable;
 import java.util.List;
 
 @Transactional
@@ -35,8 +32,8 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
     private final LdapSearchComponent ldapSearchComponent;
     private final LdapBindComponent ldapBindComponent;
     private String ldapAuthBase;
-    private String managerAuthUsername;
-    private String managerAuthPassword;
+//    private String managerAuthUsername;
+//    private String managerAuthPassword;
 
     public WebAppLdapAuthenticationProvider(
             UserService userService,
@@ -45,9 +42,7 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
             RandomStringGenerator randomStringGenerator,
             LdapSearchComponent ldapSearchComponent,
             LdapBindComponent ldapBindComponent,
-            String ldapAuthBase,
-            String managerAuthUsername,
-            String managerAuthPassword
+            String ldapAuthBase
     ) {
         this.userService = userService;
         this.entityFactory = entityFactory;
@@ -56,8 +51,6 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
         this.ldapSearchComponent = ldapSearchComponent;
         this.ldapBindComponent = ldapBindComponent;
         this.ldapAuthBase = ldapAuthBase;
-        this.managerAuthUsername = managerAuthUsername;
-        this.managerAuthPassword = managerAuthPassword;
     }
 
     @Override
@@ -66,22 +59,35 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
         String userName = authentication.getName();
         String password = authentication.getCredentials().toString();
 
+        String userDn="";
 
-        DirContext context = ldapBindComponent.connect(authentication);
+        DirContext context = null;
+
+        if(ldapBindComponent.isLdapAuthManagerExists()) {
+            try {
+                context = ldapBindComponent.mangerAuthConnect();
+
+                List<String> dnUserList = ldapSearchComponent.searchUser(userName, context, "uid");
+                if(dnUserList.isEmpty()){
+                    LOGGER.error("Username doesn't exist");
+                    return null;
+                }
+                userDn = dnUserList.get(0);
+                context = ldapBindComponent.userConnectByUserDn(userDn,password);
+
+            } catch (NamingException e) {
+                LOGGER.error("Can't connect using auth manager");
+            }
+        } else {
+            try {
+                context = ldapBindComponent.userConnectByUserName(userName, password);
+                userDn = "uid="+userName+","+ldapAuthBase;
+            } catch (NamingException e) {
+                LOGGER.error("Can't connect using userName");
+            }
+        }
 
         if(context == null){
-            return null;
-        }
-
-        if(managerAuthUsername !=null && !managerAuthUsername.isEmpty()) {
-            userName = managerAuthUsername;
-            password = managerAuthPassword;
-        }
-
-        try{
-            ldapBindComponent.checkUsernameAndPassword(userName,password);
-        } catch (NamingException e) {
-            LOGGER.error("[Auth] Username and/or password are incorrect");
             return null;
         }
 
@@ -92,7 +98,16 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
             if (emailValidator.checkEmail(userName)) {
                 email = userName;
             } else {
-                String organization = ldapSearchComponent.getOrganization("uid="+userName+","+ldapAuthBase,context);
+                if (ldapBindComponent.isLdapEmailManagerExists()){
+                    try {
+                        context = ldapBindComponent.managerEmailConnect();
+                    } catch (NamingException e) {
+                        LOGGER.error("Can't connect using email manager");
+                        return null;
+                    }
+                }
+
+                String organization = ldapSearchComponent.getOrganization(userDn,context);
                 LOGGER.info("o: " + organization);
                 List<String> emails = ldapSearchComponent.search(userName, organization,context);
                 if (emails.isEmpty()) {

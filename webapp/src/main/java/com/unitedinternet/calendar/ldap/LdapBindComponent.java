@@ -3,10 +3,8 @@ package com.unitedinternet.calendar.ldap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
@@ -23,47 +21,53 @@ public class LdapBindComponent {
 
     private String ldapUrls;
 
-    private String managerUsername;
+    private String managerAuthUsername;
 
-    private String managerPassword;
+    private String managerAuthPassword;
+
+    private String managerEmailUsername;
+
+    private String managerEmailPassword;
 
     private String ldapTlsReqcert;
 
-    private DirContext context;
+    private DirContext managerContext;
+    
+    private DirContext userContext;
 
     public LdapBindComponent(
             @Value("${ldap.auth.base}") String ldapAuthBase,
             @Value("${ldap.auth.user.pattern}") String ldapAuthUserPattern,
             @Value("${ldap.urls}") String ldapUrls,
-            @Value("${ldap.email.manager.username:#{null}}") String managerUsername,
-            @Value("${ldap.email.manager.password:#{null}}") String managerPassword,
+            @Value("${ldap.auth.manager.username:#{null}}") String managerAuthUsername,
+            @Value("${ldap.auth.manager.password:#{null}}") String managerAuthPassword,
+            @Value("${ldap.email.manager.username:#{null}}") String managerEmailUsername,
+            @Value("${ldap.email.manager.password:#{null}}") String managerEmailPassword,
             @Value("${ldap.tls-reqcert}") String ldapTlsReqcert
     ) {
         this.ldapAuthBase = ldapAuthBase;
         this.ldapAuthUserPattern = ldapAuthUserPattern;
         this.ldapUrls = ldapUrls;
-        this.managerUsername = managerUsername;
-        this.managerPassword = managerPassword;
+        this.managerAuthUsername = managerAuthUsername;
+        this.managerAuthPassword = managerAuthPassword;
+        this.managerEmailUsername=managerEmailUsername;
+        this.managerEmailPassword=managerEmailPassword;
         this.ldapTlsReqcert = ldapTlsReqcert;
     }
 
-    public DirContext connect(Authentication authentication){
-
-        String userName = authentication.getName();
-        String password = authentication.getCredentials().toString();
-
-        String ldapUser = ldapAuthUserPattern.replace("{0}",userName)+","+ldapAuthBase;
-
-        if(managerUsername !=null && !managerUsername.isEmpty()) {
-            ldapUser = managerUsername;
-            password = managerPassword;
+    public DirContext userConnectByUserDn(String userDn, String password) throws NamingException {
+        if(userContext !=null) {
+            if (userContext.getEnvironment().get(javax.naming.Context.SECURITY_PRINCIPAL).equals(userDn)) {
+                LOGGER.info("Same user in connect");
+                return userContext;
+            }
         }
 
         Hashtable<String, String> env = new Hashtable<>();
         env.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
         env.put(javax.naming.Context.PROVIDER_URL, ldapUrls);
         env.put(javax.naming.Context.SECURITY_AUTHENTICATION, "simple");
-        env.put(javax.naming.Context.SECURITY_PRINCIPAL, ldapUser);
+        env.put(javax.naming.Context.SECURITY_PRINCIPAL, userDn);
         env.put(javax.naming.Context.SECURITY_CREDENTIALS, password);
 
         env.put("java.naming.ldap.version", "3");
@@ -73,44 +77,83 @@ public class LdapBindComponent {
         env.put("java.naming.ldap.attributes.binary", "tls_reqcert=" + ldapTlsReqcert);
 
         try {
-            context = new InitialDirContext(env);
+            userContext = new InitialDirContext(env);
             LOGGER.info("LDAP bind successful...");
         } catch (NamingException e) {
             LOGGER.error("LDAP bind failed...");
             return null;
         }
-        return context;
+        return userContext;
     }
 
-    public DirContext getContext(){
-        return context;
+    public DirContext userConnectByUserName(String userName, String password) throws NamingException {
+
+        String userDn = ldapAuthUserPattern.replace("{0}",userName)+","+ldapAuthBase;
+        return userConnectByUserDn(userDn, password);
+
     }
 
+    public DirContext mangerAuthConnect() throws NamingException {
+        String userName = managerAuthUsername;
+        String password = managerAuthPassword;
 
-    public boolean checkUsernameAndPassword(String userName, String password) throws NamingException {
-        String ldapUser = ldapAuthUserPattern.replace("{0}",userName)+","+ldapAuthBase;
-        if(context!=null) {
-            Hashtable<?, ?> env = context.getEnvironment();
-            if (context.getEnvironment().get(javax.naming.Context.SECURITY_PRINCIPAL).equals(ldapUser)) {
-                LOGGER.info("Same user");
-                return true;
+        if(managerContext !=null) {
+            if (managerContext.getEnvironment().get(javax.naming.Context.SECURITY_PRINCIPAL).equals(userName)) {
+                LOGGER.info("Same manager in auth connect");
+                return managerContext;
             }
-            Hashtable <String, String> userEnv = (Hashtable<String, String>) env.clone();
-            userEnv.put(javax.naming.Context.SECURITY_PRINCIPAL, ldapUser);
-            userEnv.put(javax.naming.Context.SECURITY_CREDENTIALS, password);
-            context = new InitialDirContext(userEnv);
-            LOGGER.info("New context");
-            context = new InitialDirContext(env);
-            LOGGER.info("Return to old context");
-        }  else {
-            Hashtable<String, String> userEnv = new Hashtable<>();
-            userEnv.put(javax.naming.Context.SECURITY_PRINCIPAL, ldapUser);
-            userEnv.put(javax.naming.Context.SECURITY_CREDENTIALS, password);
-            context = new InitialDirContext(userEnv);
-            LOGGER.info("Create new context");
         }
-        return true;
+        return managerConnect(userName,password);
     }
 
+    public DirContext managerEmailConnect() throws NamingException {
+        String userName = managerEmailUsername;
+        String password = managerEmailPassword;
+
+        if(managerContext !=null) {
+            if (managerContext.getEnvironment().get(javax.naming.Context.SECURITY_PRINCIPAL).equals(userName)) {
+                LOGGER.info("Same manager in email connect");
+                return managerContext;
+            }
+        }
+        return managerConnect(userName,password);
+    }
+
+
+    public DirContext getManagerContext(){
+        return managerContext;
+    }
+
+    public boolean isLdapEmailManagerExists(){
+        return managerEmailUsername !=null && !managerEmailUsername.isEmpty();
+    }
+
+    public boolean isLdapAuthManagerExists(){
+        return managerAuthUsername !=null && !managerAuthUsername.isEmpty();
+    }
+
+    private DirContext managerConnect(String userName, String password){
+        Hashtable<String, String> env = new Hashtable<>();
+        env.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(javax.naming.Context.PROVIDER_URL, ldapUrls);
+        env.put(javax.naming.Context.SECURITY_AUTHENTICATION, "simple");
+        env.put(javax.naming.Context.SECURITY_PRINCIPAL, userName);
+        env.put(javax.naming.Context.SECURITY_CREDENTIALS, password);
+
+        env.put("java.naming.ldap.version", "3");
+
+        env.put("java.naming.security.authentication", "simple");
+
+        env.put("java.naming.ldap.attributes.binary", "tls_reqcert=" + ldapTlsReqcert);
+
+        try {
+            managerContext = new InitialDirContext(env);
+            LOGGER.info("LDAP manager bind successful...");
+        } catch (NamingException e) {
+            LOGGER.error("LDAP manager bind failed...");
+            return null;
+        }
+        return managerContext;
+    }
 
 }
