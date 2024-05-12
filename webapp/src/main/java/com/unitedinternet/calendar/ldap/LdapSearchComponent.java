@@ -19,39 +19,43 @@ public class LdapSearchComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LdapSearchComponent.class);
 
-    private final String ldapFilter;
+    private final String ldapEmailFilter;
+    private final String ldapAuthFilter;
     private final String ldapEmailBase;
     private final String ldapAuthBase;
     private final String ldapEmailAttribute;
-    private final String searchScope;
+    private final String searchScopeEmail;
     private final String countLimit;
     private final String ldapAuthAttribute;
-    private final String authScope;
+    private final String searchScopeAuth;
 
     public LdapSearchComponent(
-            @Value("${ldap.email.filter}") String ldapFilter,
+            @Value("${ldap.email.filter}") String ldapEmailFilter,
+            @Value("${ldap.auth.filter}") String ldapAuthFilter,
             @Value("${ldap.email.base}") String ldapEmailBase,
             @Value("${ldap.auth.base}") String ldapAuthBase,
             @Value("${ldap.email.attribute}") String ldapEmailAttribute,
-            @Value("${ldap.email.search-scope}") String searchScope,
+            @Value("${ldap.email.search-scope}") String searchScopeEmail,
             @Value("${ldap.email.count-limit}") String countLimit,
             @Value("${ldap.auth.attribute}") String ldapAuthAttribute,
-            @Value("${ldap.auth.search-scope}") String authScope
+            @Value("${ldap.auth.search-scope}") String searchScopeAuth
     ) {
-        this.ldapFilter = ldapFilter;
+        this.ldapEmailFilter = ldapEmailFilter;
+        this.ldapAuthFilter = ldapAuthFilter;
         this.ldapEmailBase = ldapEmailBase;
         this.ldapAuthBase = ldapAuthBase;
         this.ldapEmailAttribute = ldapEmailAttribute;
-        this.searchScope = searchScope;
+        this.searchScopeEmail = searchScopeEmail;
         this.countLimit = countLimit;
         this.ldapAuthAttribute = ldapAuthAttribute;
-        this.authScope = authScope;
+        this.searchScopeAuth = searchScopeAuth;
     }
 
     public String getOrganization(String userDn, DirContext dirContext) {
+        String searchAttribute = ldapAuthAttribute.split(",")[1];
         SearchControls controls = new SearchControls();
-        controls.setSearchScope(authScope.equals("ONE") ? SearchControls.ONELEVEL_SCOPE : SearchControls.SUBTREE_SCOPE);
-        controls.setReturningAttributes(new String[]{ldapAuthAttribute.split(",")[1]});
+        controls.setSearchScope(searchScopeAuth.equals("ONE") ? SearchControls.ONELEVEL_SCOPE : SearchControls.SUBTREE_SCOPE);
+        controls.setReturningAttributes(new String[]{searchAttribute});
 
         try {
             NamingEnumeration<SearchResult> results = dirContext.search(userDn, "(objectclass=*)", controls);
@@ -59,7 +63,7 @@ public class LdapSearchComponent {
             while (results.hasMore()) {
                 SearchResult searchResult = results.next();
                 Attributes attrs = searchResult.getAttributes();
-                return (String) attrs.get("o").get();
+                return (String) attrs.get(searchAttribute).get();
             }
         } catch (NamingException e) {
             LOGGER.error("Get organization exception {}",e.getMessage());
@@ -70,12 +74,12 @@ public class LdapSearchComponent {
 
     public List<String> search(String uid, String oValue, DirContext dirContext) {
 
-        String filter = ldapFilter.replace("%u", uid).replace("%o", oValue);
+        String filter = ldapEmailFilter.replace("%u", uid).replace("%o", oValue);
 
         SearchControls controls = new SearchControls();
         controls.setCountLimit(Long.parseLong(countLimit));
         controls.setReturningAttributes(new String[]{ldapEmailAttribute});
-        controls.setSearchScope(searchScope.equals("ONE") ? SearchControls.ONELEVEL_SCOPE : SearchControls.SUBTREE_SCOPE);
+        controls.setSearchScope(searchScopeEmail.equals("ONE") ? SearchControls.ONELEVEL_SCOPE : SearchControls.SUBTREE_SCOPE);
 
         List<String> results = new ArrayList<>();
 
@@ -96,12 +100,12 @@ public class LdapSearchComponent {
 
     public List<String> searchUser(String uid, DirContext dirContext, String attribute) {
 
-        String filter = "(uid="+uid+")";
+        String filter = ldapAuthFilter.replace("%u",uid);
 
         SearchControls controls = new SearchControls();
         controls.setCountLimit(Long.parseLong(countLimit));
         controls.setReturningAttributes(new String[]{attribute});
-        controls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+        controls.setSearchScope(searchScopeAuth.equals("ONE") ? SearchControls.ONELEVEL_SCOPE : SearchControls.SUBTREE_SCOPE);
 
         List<String> results = new ArrayList<>();
 
