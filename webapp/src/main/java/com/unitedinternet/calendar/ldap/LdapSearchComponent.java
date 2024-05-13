@@ -54,7 +54,7 @@ public class LdapSearchComponent {
     public String getOrganization(String userDn, DirContext dirContext) {
         String searchAttribute = ldapAuthAttribute.split(",")[1];
         SearchControls controls = new SearchControls();
-        controls.setSearchScope(searchScopeAuth.equals("ONE") ? SearchControls.ONELEVEL_SCOPE : SearchControls.SUBTREE_SCOPE);
+        controls.setSearchScope(stringToSearchControl(searchScopeAuth));
         controls.setReturningAttributes(new String[]{searchAttribute});
 
         try {
@@ -79,7 +79,7 @@ public class LdapSearchComponent {
         SearchControls controls = new SearchControls();
         controls.setCountLimit(Long.parseLong(countLimit));
         controls.setReturningAttributes(new String[]{ldapEmailAttribute});
-        controls.setSearchScope(searchScopeEmail.equals("ONE") ? SearchControls.ONELEVEL_SCOPE : SearchControls.SUBTREE_SCOPE);
+        controls.setSearchScope(stringToSearchControl(searchScopeEmail));
 
         List<String> results = new ArrayList<>();
 
@@ -105,7 +105,7 @@ public class LdapSearchComponent {
         SearchControls controls = new SearchControls();
         controls.setCountLimit(Long.parseLong(countLimit));
         controls.setReturningAttributes(new String[]{attribute});
-        controls.setSearchScope(searchScopeAuth.equals("ONE") ? SearchControls.ONELEVEL_SCOPE : SearchControls.SUBTREE_SCOPE);
+        controls.setSearchScope(stringToSearchControl(searchScopeAuth));
 
         List<String> results = new ArrayList<>();
 
@@ -117,10 +117,28 @@ public class LdapSearchComponent {
                 results.add(searchResult.getNameInNamespace());
             }
         } catch (NamingException e) {
-            LOGGER.error("Search exception: {}", e.getMessage());
+            LOGGER.error("Search user exception: {}", e.getMessage());
         }
 
         return results;
+    }
+
+    private int stringToSearchControl(String value){
+        int searchControl;
+        switch (value){
+            case "BASE":
+                searchControl = SearchControls.OBJECT_SCOPE;
+                break;
+            case "ONE":
+                searchControl = SearchControls.ONELEVEL_SCOPE;
+                break;
+            case  "SUBTREE":
+                searchControl = SearchControls.SUBTREE_SCOPE;
+                break;
+            default:
+                searchControl = SearchControls.SUBTREE_SCOPE;
+        }
+        return searchControl;
     }
 
 }
