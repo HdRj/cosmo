@@ -10,7 +10,8 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import java.util.Hashtable;
 
-@Component
+@Deprecated
+//@Component
 public class LdapBindComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LdapBindComponent.class);

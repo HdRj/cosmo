@@ -1,7 +1,8 @@
 package com.unitedinternet.calendar;
 
-import com.unitedinternet.calendar.ldap.LdapBindComponent;
-import com.unitedinternet.calendar.ldap.LdapSearchComponent;
+
+import com.unitedinternet.calendar.ldap.LdapBindUnboundidComponent;
+import com.unitedinternet.calendar.ldap.LdapSearchUnboundidComponent;
 import com.unitedinternet.calendar.utils.EmailValidator;
 import com.unitedinternet.calendar.utils.RandomStringGenerator;
 import org.springframework.context.annotation.Bean;
@@ -38,11 +39,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final EntityFactory entityFactory;
     private final EmailValidator emailValidator;
     private final RandomStringGenerator randomStringGenerator;
-    private final LdapSearchComponent ldapSearchComponent;
-    private final LdapBindComponent ldapBindComponent;
+    private final LdapSearchUnboundidComponent ldapSearchComponent;
+    private final LdapBindUnboundidComponent ldapBindComponent;
 
 
-    public SecurityConfig(UserService userService, EntityFactory entityFactory, EmailValidator emailValidator, RandomStringGenerator randomStringGenerator, LdapSearchComponent ldapSearchComponent, LdapBindComponent ldapBindComponent) {
+    public SecurityConfig(UserService userService, EntityFactory entityFactory, EmailValidator emailValidator, RandomStringGenerator randomStringGenerator, LdapSearchUnboundidComponent ldapSearchComponent, LdapBindUnboundidComponent ldapBindComponent) {
         this.userService = userService;
         this.entityFactory = entityFactory;
         this.emailValidator = emailValidator;

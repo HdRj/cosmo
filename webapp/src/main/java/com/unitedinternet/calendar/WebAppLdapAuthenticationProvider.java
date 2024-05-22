@@ -1,7 +1,8 @@
 package com.unitedinternet.calendar;
 
-import com.unitedinternet.calendar.ldap.LdapBindComponent;
-import com.unitedinternet.calendar.ldap.LdapSearchComponent;
+import com.unboundid.ldap.sdk.LDAPConnection;
+import com.unitedinternet.calendar.ldap.LdapBindUnboundidComponent;
+import com.unitedinternet.calendar.ldap.LdapSearchUnboundidComponent;
 import com.unitedinternet.calendar.utils.EmailValidator;
 import com.unitedinternet.calendar.utils.RandomStringGenerator;
 import org.slf4j.Logger;
@@ -16,8 +17,6 @@ import org.unitedinternet.cosmo.model.EntityFactory;
 import org.unitedinternet.cosmo.model.User;
 import org.unitedinternet.cosmo.service.UserService;
 
-import javax.naming.NamingException;
-import javax.naming.directory.DirContext;
 import java.util.List;
 
 @Transactional
@@ -29,8 +28,8 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
     private final EntityFactory entityFactory;
     private final EmailValidator emailValidator;
     private final RandomStringGenerator randomStringGenerator;
-    private final LdapSearchComponent ldapSearchComponent;
-    private final LdapBindComponent ldapBindComponent;
+    private final LdapSearchUnboundidComponent ldapSearchComponent;
+    private final LdapBindUnboundidComponent ldapBindComponent;
     private String ldapAuthBase;
 //    private String managerAuthUsername;
 //    private String managerAuthPassword;
@@ -40,8 +39,8 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
             EntityFactory entityFactory,
             EmailValidator emailValidator,
             RandomStringGenerator randomStringGenerator,
-            LdapSearchComponent ldapSearchComponent,
-            LdapBindComponent ldapBindComponent,
+            LdapSearchUnboundidComponent ldapSearchComponent,
+            LdapBindUnboundidComponent ldapBindComponent,
             String ldapAuthBase
     ) {
         this.userService = userService;
@@ -61,7 +60,8 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 
         String userDn="";
 
-        DirContext context = null;
+        //DirContext context = null;
+        LDAPConnection context = null;
 
         if(ldapBindComponent.isLdapAuthManagerExists()) {
             try {
@@ -75,14 +75,14 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
                 userDn = dnUserList.get(0);
                 context = ldapBindComponent.userConnectByUserDn(userDn,password);
 
-            } catch (NamingException e) {
+            } catch (Exception e) {
                 LOGGER.error("Can't connect using auth manager");
             }
         } else {
             try {
                 context = ldapBindComponent.userConnectByUserName(userName, password);
                 userDn = "uid="+userName+","+ldapAuthBase;
-            } catch (NamingException e) {
+            } catch (Exception e) {
                 LOGGER.error("Can't connect using userName");
             }
         }
@@ -101,12 +101,11 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
                 if (ldapBindComponent.isLdapEmailManagerExists()){
                     try {
                         context = ldapBindComponent.managerEmailConnect();
-                    } catch (NamingException e) {
+                    } catch (Exception e) {
                         LOGGER.error("Can't connect using email manager");
                         return null;
                     }
                 }
-
                 String organization = ldapSearchComponent.getOrganization(userDn,context);
                 LOGGER.info("o: " + organization);
                 List<String> emails = ldapSearchComponent.search(userName, organization,context);

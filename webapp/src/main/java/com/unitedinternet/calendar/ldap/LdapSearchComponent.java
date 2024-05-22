@@ -14,7 +14,8 @@ import javax.naming.directory.SearchResult;
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+@Deprecated
+//@Component
 public class LdapSearchComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LdapSearchComponent.class);
