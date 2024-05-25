@@ -109,8 +109,9 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
                     }
                 }
 
-                String organization = ldapSearchComponent.getOrganization(userDn,context);
-                LOGGER.info("o: " + organization);
+                //String organization = ldapSearchComponent.getOrganization(userDn,context);
+                //LOGGER.info("o: " + organization);
+                HashMap<String, String> criteria = ldapSearchComponent.getVariables(userDn,context);
 
                 if (ldapBindComponent.isLdapEmailManagerExists()){
                     try {
@@ -120,9 +121,6 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
                         return null;
                     }
                 }
-
-                
-                HashMap<String, String> criteria = ldapSearchComponent.getVariables(userDn,context);
 
                 List<String> emails = ldapSearchComponent.search(userName, criteria, context);
 
