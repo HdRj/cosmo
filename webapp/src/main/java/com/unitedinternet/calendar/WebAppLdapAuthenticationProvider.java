@@ -18,6 +18,7 @@ import org.unitedinternet.cosmo.model.User;
 import org.unitedinternet.cosmo.service.UserService;
 
 import java.util.List;
+import java.util.HashMap;
 
 @Transactional
 public class WebAppLdapAuthenticationProvider implements AuthenticationProvider {
@@ -119,7 +120,13 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
                         return null;
                     }
                 }
-                List<String> emails = ldapSearchComponent.search(userName, organization,context);
+
+                
+                HashMap<String, String> criteria = ldapSearchComponent.getVariables(userDn,context);
+
+                List<String> emails = ldapSearchComponent.search(userName, criteria, context);
+
+                
                 if (emails.isEmpty()) {
                     LOGGER.error("[AUTH] Email address is not found for user: {}", userName);
                     return null;
