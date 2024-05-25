@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
 
 @Component
 public class LdapSearchUnboundidComponent {
@@ -46,30 +47,44 @@ public class LdapSearchUnboundidComponent {
         this.searchScopeAuth = searchScopeAuth;
     }
 
-    public String getOrganization(String userDn, LDAPConnection connection) {
-        String searchAttribute = ldapAuthAttribute.split(",")[1];
+    // get the values of the attributes that we need to search for the
+    // email address
+    public HashMap<String, String> getVariables(String userDn, LDAPConnection connection) {
+
+        String[] searchAttributes = ldapAuthAttribute.split(",");
+        HashMap<String, String> AttributeValues = new HashMap<>(); 
 
         try {
             SearchScope scope = SearchScope.BASE;
-            SearchRequest searchRequest = new SearchRequest(userDn, scope,"(objectclass=*)", searchAttribute);
+            SearchRequest searchRequest = new SearchRequest(userDn, scope,"(objectclass=*)", searchAttributes);
             SearchResult searchResult = connection.search(searchRequest);
 
-            System.out.println(searchResult.getSearchEntries().size());
-            System.out.println(searchResult.getSearchEntries().get(0));
-
             for (SearchResultEntry entry : searchResult.getSearchEntries()) {
-                return entry.getAttributeValue(searchAttribute);
+                for (String attribute: searchAttributes) {
+                    AttributeValues.put(attribute, entry.getAttributeValue(attribute));
+                }
             }
         } catch (LDAPException e) {
             LOGGER.error("Get organization exception {}",e.getMessage());
         }
 
-        return null;
+        return AttributeValues;
     }
 
-    public List<String> search(String uid, String oValue, LDAPConnection connection) {
+    //replace filter variables with their found values
+    public String substituteVariables(HashMap<String, String> attributes, String filter) {
 
-        String filter = ldapEmailFilter.replace("%u", uid).replace("%o", oValue);
+        for ( HashMap.Entry<String, String> attribute : attributes.entrySet() ) {
+            filter = filter.replaceAll("%" + attribute.getKey() + "\\b", attribute.getValue());
+        }
+
+        return filter;
+    }
+
+    // search for the email address of a user
+    public List<String> search(String uid, HashMap<String, String> criteria, LDAPConnection connection) {
+
+        String filter = substituteVariables(criteria,ldapEmailFilter);
 
         String[] attributesToReturn = new String[]{ldapEmailAttribute};
         int countLimitValue = Integer.parseInt(countLimit);
@@ -92,6 +107,7 @@ public class LdapSearchUnboundidComponent {
         return results;
     }
 
+    // search for user with manager
     public List<String> searchUser(String uid,  LDAPConnection connection, String attribute) {
 
         String filter = ldapAuthFilter.replace("%u", uid);
