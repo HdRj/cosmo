@@ -54,9 +54,6 @@ public class LdapSearchUnboundidComponent {
             SearchRequest searchRequest = new SearchRequest(userDn, scope,"(objectclass=*)", searchAttribute);
             SearchResult searchResult = connection.search(searchRequest);
 
-            System.out.println(searchResult.getSearchEntries().size());
-            System.out.println(searchResult.getSearchEntries().get(0));
-
             for (SearchResultEntry entry : searchResult.getSearchEntries()) {
                 return entry.getAttributeValue(searchAttribute);
             }

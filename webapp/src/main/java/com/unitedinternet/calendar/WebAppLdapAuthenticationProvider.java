@@ -98,6 +98,19 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
             if (emailValidator.checkEmail(userName)) {
                 email = userName;
             } else {
+
+                if (ldapBindComponent.isLdapAuthManagerExists()){
+                    try {
+                        context = ldapBindComponent.mangerAuthConnect();
+                    } catch (Exception e) {
+                        LOGGER.error("Can't connect using auth manager");
+                        return null;
+                    }
+                }
+
+                String organization = ldapSearchComponent.getOrganization(userDn,context);
+                LOGGER.info("o: " + organization);
+
                 if (ldapBindComponent.isLdapEmailManagerExists()){
                     try {
                         context = ldapBindComponent.managerEmailConnect();
@@ -106,8 +119,6 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
                         return null;
                     }
                 }
-                String organization = ldapSearchComponent.getOrganization(userDn,context);
-                LOGGER.info("o: " + organization);
                 List<String> emails = ldapSearchComponent.search(userName, organization,context);
                 if (emails.isEmpty()) {
                     LOGGER.error("[AUTH] Email address is not found for user: {}", userName);
