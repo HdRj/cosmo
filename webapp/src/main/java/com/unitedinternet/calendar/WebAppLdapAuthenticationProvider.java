@@ -92,26 +92,20 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
             return null;
         }
 
+        // check if there is a cosmo user
         User user = getUser(userName);
 
         if(user == null) {
             String email;
+            
+            // get the filter variable values
+            // (with user bind)
+            HashMap<String, String> criteria = ldapSearchComponent.getVariables(userDn,context);
+
+            // get the email address
             if (emailValidator.checkEmail(userName)) {
                 email = userName;
             } else {
-
-                if (ldapBindComponent.isLdapAuthManagerExists()){
-                    try {
-                        context = ldapBindComponent.mangerAuthConnect();
-                    } catch (Exception e) {
-                        LOGGER.error("Can't connect using auth manager");
-                        return null;
-                    }
-                }
-
-                //String organization = ldapSearchComponent.getOrganization(userDn,context);
-                //LOGGER.info("o: " + organization);
-                HashMap<String, String> criteria = ldapSearchComponent.getVariables(userDn,context);
 
                 if (ldapBindComponent.isLdapEmailManagerExists()){
                     try {
@@ -121,10 +115,9 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
                         return null;
                     }
                 }
-
+                
                 List<String> emails = ldapSearchComponent.search(userName, criteria, context);
 
-                
                 if (emails.isEmpty()) {
                     LOGGER.error("[AUTH] Email address is not found for user: {}", userName);
                     return null;
@@ -136,11 +129,14 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
                 LOGGER.error("[AUTH] Email address is not valid: {}", email);
                 return null;
             }
+
+            // create cosmo user
             user = this.createUserIfNotPresent(userName, email);
             if (user == null) {
                 return null;
             }
         }
+
         return new UsernamePasswordAuthenticationToken(
                 new CosmoUserDetails(user),
                 authentication.getCredentials(),
@@ -166,11 +162,11 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
     private User createUserIfNotPresent(String userName,String email) {
         User user = this.userService.getUser(userName);
         if (user != null) {
-            LOGGER.info("[AUTH] Found user with email address: {}", user.getEmail());
+            LOGGER.info("[AUTH] Cosmo user exists: {}", userName);
             return user;
         }
 
-        LOGGER.info("[AUTH] No user found for uid address: {}. Creating one...", userName);
+        LOGGER.info("[AUTH] Creating new cosmo user: {}.", userName);
         user = this.entityFactory.createUser();
         user.setUsername(userName);
         user.setEmail(email);
@@ -188,3 +184,4 @@ public class WebAppLdapAuthenticationProvider implements AuthenticationProvider 
 
 
 }
+

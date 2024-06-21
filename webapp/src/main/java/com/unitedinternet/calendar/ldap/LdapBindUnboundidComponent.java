@@ -151,10 +151,10 @@ public class LdapBindUnboundidComponent {
                     connection = new LDAPConnection(host, port, userDn, password);
                 }
 
-                System.out.println("Connected to " + host + " on port " + port);
+                LOGGER.info("Connected to " + host + ":" + port);
                 break;
             } catch (LDAPException e) {
-                System.err.println("Failed to connect to " + host + " on port " + port + ": " + e.getMessage());
+                LOGGER.error("Failed to connect to " + host + ":" + port + " " + e.getMessage());
             } catch (GeneralSecurityException e) {
                 throw new RuntimeException(e);
             }
