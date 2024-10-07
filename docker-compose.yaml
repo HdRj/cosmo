@@ -1,0 +1,15 @@
+services:
+  cosmo:
+    image: test:latest
+    volumes:
+      - /mnt/ramdisk:/mnt/ramdisk
+      - /dev:/dev
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ${HOME}:/root/host
+    environment:
+      - DISPLAY=${DISPLAY}
+      - PYTHONPATH=$PYTHONPATH:/usr/local/OFF
+    #runtime: nvidia
+    #command: bash -c "tail -f /dev/null"
+    privileged: true
+
