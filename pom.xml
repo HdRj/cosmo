@@ -76,6 +76,7 @@
 	<modules>
 		<module>cosmo-api</module>
 		<module>cosmo-core</module>
+		<module>cosmo-core-ext</module>
 		<module>webapp</module>
 	</modules>
 
