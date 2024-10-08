@@ -1,6 +1,7 @@
 package org.unitedinternet.cosmo.service.impl;
 
 
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.property.Description;
 
 @Service
 public class CalendarManagementService implements CalendarService {
@@ -121,6 +123,10 @@ public class CalendarManagementService implements CalendarService {
             case COMMAND_SHARED_READ:
                 // Process sharing read permissions
                 LOG.info("Processing share-read");
+                java.util.Calendar calendar = java.util.Calendar.getInstance();
+                SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+                Description description = new Description("======= update (" + format.format(calendar.getTime()) + ") =======");
+                event.getProperties().add(description);
                 break;
             case COMMAND_SET_NAME:
                 // Process setting calendar name
