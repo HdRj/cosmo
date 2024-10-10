@@ -51,5 +51,5 @@ RUN mkdir -p BOOT-INF/classes/ && \
 WORKDIR /home/cosmo/webapp
 
 CMD ["java -jar target/webapp.jar"]
-# CMD ["/bin/bash"]
+#CMD ["/bin/bash"]
 

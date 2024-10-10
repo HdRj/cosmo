@@ -9,7 +9,6 @@ services:
     environment:
       - DISPLAY=${DISPLAY}
       - PYTHONPATH=$PYTHONPATH:/usr/local/OFF
-    #runtime: nvidia
-    #command: bash -c "tail -f /dev/null"
+    command: bash -c "tail -f /dev/null"
     privileged: true
 
