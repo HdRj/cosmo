@@ -100,6 +100,11 @@
             <version>5.0.7-SNAPSHOT</version>
         </dependency>
         <dependency>
+            <groupId>net.oneandone.cosmo</groupId>
+            <artifactId>cosmo-core-ext</artifactId>
+            <version>5.0.7-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
         </dependency>
