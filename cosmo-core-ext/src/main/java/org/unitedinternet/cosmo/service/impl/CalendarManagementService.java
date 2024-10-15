@@ -35,6 +35,8 @@ import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
 import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.property.Clazz;
+import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Description;
 
 @Service
@@ -92,13 +94,20 @@ public class CalendarManagementService implements CalendarService {
      */
     public boolean isValidManagementEvent(VEvent event) {
         // Ensure CLASS is PRIVATE
-        String classification = event.getClassification().getValue();
-        if (!"PRIVATE".equals(classification)) {
+        Clazz classification = event.getClassification();
+        if (classification == null) {
+            return false;
+        }
+        if (Clazz.PRIVATE != classification) {
             return false;
         }
 
         // Check if the SUMMARY matches one of the allowed commands
-        String summary = event.getSummary().getValue().trim();
+        Summary summaryProperty = event.getSummary();
+        if (summaryProperty == null) {
+            return false;
+        }
+        String summary = summaryProperty.getValue().trim();
         return allowedCommands.contains(summary);
     }
 
