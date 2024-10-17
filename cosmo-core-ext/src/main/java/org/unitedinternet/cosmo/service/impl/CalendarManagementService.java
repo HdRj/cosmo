@@ -69,6 +69,18 @@ public class CalendarManagementService implements CalendarService {
 
     private static final String COMMAND_SET_CALENDAR_COLOR = "calendar-manage: set-calendar-colour";
 
+    private static final String COMMAND_SET_CALENDAR_DEFAULT_ALERT = "calendar-manage: set-calendar-default-alert";
+    private static final String COMMAND_SET_CALENDAR_DEFAULT_DURATION = "calendar-manage: set-calendar-default-duration";
+    private static final String COMMAND_SET_CALENDAR_DEFAULT_HOME = "calendar-manage: set-calendar-default-home";
+
+    private static final String COMMAND_SET_CALENDAR_NOTIFICATION_LOCATION = "calendar-manage: set-calendar-notification-location";
+
+    private static final String COMMAND_SET_CALENDAR_TIMEZONE = "calendar-manage: set-calendar-timezone";
+
+    private static final String COMMAND_SET_CALENDAR_LOG_AUDIT = "calendar-manage: set-calendar-log-audit";
+
+    private static final String COMMAND_SET_CALENDAR_NOTIFICATION_DELETES = "calendar-manage: set-calendar-notification-deletes";
+
 
     /**
      * list of allowed management commands
@@ -80,13 +92,13 @@ public class CalendarManagementService implements CalendarService {
         COMMAND_SET_NAME,
         COMMAND_ADD_CALENDAR,
         COMMAND_SET_CALENDAR_COLOR,
-        "calendar-manage: set-calendar-default-alert",
-        "calendar-manage: set-calendar-default-duration",
-        "calendar-manage: set-calendar-default-home",
-        "calendar-manage: set-calendar-notification-location",
-        "calendar-manage: set-calendar-timezone",
-        "calendar-manage: set-calendar-log-audit",
-        "calendar-manage: set-calendar-notification-deletes"
+        COMMAND_SET_CALENDAR_DEFAULT_ALERT,
+        COMMAND_SET_CALENDAR_DEFAULT_DURATION,
+        COMMAND_SET_CALENDAR_DEFAULT_HOME,
+        COMMAND_SET_CALENDAR_NOTIFICATION_LOCATION,
+        COMMAND_SET_CALENDAR_TIMEZONE,
+        COMMAND_SET_CALENDAR_LOG_AUDIT,
+        COMMAND_SET_CALENDAR_NOTIFICATION_DELETES
     );
 
     /**
