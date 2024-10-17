@@ -2,8 +2,6 @@ package org.unitedinternet.cosmo.service.interceptors;
 
 import org.unitedinternet.cosmo.service.impl.CalendarManagementService;
 
-import org.unitedinternet.cosmo.dao.ContentDao;
-
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Set;
@@ -33,9 +31,6 @@ public class CalendarManagementEventAddHandler implements EventAddHandler {
     private static final Logger LOG = LoggerFactory.getLogger(CalendarManagementEventAddHandler.class);
 
     @Autowired
-    private ContentDao contentDao;
-
-    @Autowired
     private CalendarManagementService management;
 
 
@@ -51,10 +46,7 @@ public class CalendarManagementEventAddHandler implements EventAddHandler {
             // Get event
             EventStamp eventStamp = StampUtils.getEventStamp(item);
             VEvent event = eventStamp.getEvent();
-            if (management.handleCalendarEvent(event)) {
-                // Save the modified item back to the DAO or database
-                contentDao.updateContent(item);
-            }
+            management.handleCalendarEvent(event);
         }
     }
 
