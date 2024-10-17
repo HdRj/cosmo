@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import org.unitedinternet.cosmo.dao.CalendarDao;
 import org.unitedinternet.cosmo.dao.ContentDao;
 import org.unitedinternet.cosmo.dao.external.UuidExternalGenerator;
@@ -31,6 +32,7 @@ import org.unitedinternet.cosmo.service.CalendarService;
 
 import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.TimeZone;
 import net.fortuna.ical4j.model.TimeZoneRegistry;
 import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
@@ -126,18 +128,18 @@ public class CalendarManagementService implements CalendarService {
     /**
      * method to process the event if it's valid
      */
-    public void handleCalendarEvent(VEvent event) {
+    public boolean handleCalendarEvent(VEvent event) {
         if (isValidManagementEvent(event)) {
-            processEvent(event);
+            return processEvent(event);
         } else {
-            LOG.debug("Invalid or non-management event, skipping.");
+            return false;
         }
     }
 
     /**
      * implement the logic for processing management events here
      */
-    private void processEvent(VEvent event) {
+    private boolean processEvent(VEvent event) {
         // Based on the event's SUMMARY, process the management command
         String summary = event.getSummary().getValue().trim();
         switch (summary) {
@@ -147,6 +149,7 @@ public class CalendarManagementService implements CalendarService {
                 java.util.Calendar calendar = java.util.Calendar.getInstance();
                 SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
                 Description description = new Description("======= update (" + format.format(calendar.getTime()) + ") =======");
+                event.getProperties().removeAll(event.getProperties(Property.DESCRIPTION));
                 event.getProperties().add(description);
                 break;
             case COMMAND_SET_NAME:
@@ -160,7 +163,9 @@ public class CalendarManagementService implements CalendarService {
             // Add other cases for different management commands
             default:
                 LOG.error("Unsupported management command: " + summary);
+                return false;
         }
+        return true;
     }
 
 
