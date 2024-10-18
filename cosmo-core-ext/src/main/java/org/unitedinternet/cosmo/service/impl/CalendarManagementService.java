@@ -131,14 +131,19 @@ public class CalendarManagementService implements CalendarService {
     /**
      * method to process the event if it's valid
      */
-    public boolean handleCalendarEvent(ContentItem item) {
+    public boolean handleCalendarEvent(CollectionItem collection, ContentItem item) {
         // Get event
         EventStamp eventStamp = StampUtils.getEventStamp(item);
         VEvent masterEvent = eventStamp.getMasterEvent();
         if (isValidManagementEvent(masterEvent)) {
             boolean success = processEvent(masterEvent);
             if (success) {
-                contentDao.updateContent(item);
+                // Remove the existing event
+                contentDao.removeItem(item);
+                LOG.info("Removed existing event with UID: " + masterEvent.getUid().getValue());
+                // Insert the updated event into the calendar
+                contentDao.addItemToCollection(item, collection);
+                LOG.info("Inserted updated event with UID: " + masterEvent.getUid().getValue());
             }
             return success;
         } else {

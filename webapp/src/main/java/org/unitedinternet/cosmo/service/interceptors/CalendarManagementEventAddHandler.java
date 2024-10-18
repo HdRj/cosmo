@@ -41,7 +41,7 @@ public class CalendarManagementEventAddHandler implements EventAddHandler {
     public void beforeAdd(CollectionItem parent, Set<ContentItem> contentItems) {
         // Handle event
         for (ContentItem item : contentItems) {
-            management.handleCalendarEvent(item);
+            management.handleCalendarEvent(parent, item);
         }
     }
 
