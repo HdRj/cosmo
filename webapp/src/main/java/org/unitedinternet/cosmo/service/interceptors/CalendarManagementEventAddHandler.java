@@ -45,8 +45,8 @@ public class CalendarManagementEventAddHandler implements EventAddHandler {
         for (ContentItem item : contentItems) {
             // Get event
             EventStamp eventStamp = StampUtils.getEventStamp(item);
-            VEvent event = eventStamp.getEvent();
-            management.handleCalendarEvent(event);
+            VEvent masterEvent = eventStamp.getMasterEvent();
+            management.handleCalendarEvent(masterEvent);
         }
     }
 
