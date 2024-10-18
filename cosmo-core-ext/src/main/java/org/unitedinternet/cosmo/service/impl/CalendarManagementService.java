@@ -22,9 +22,11 @@ import org.unitedinternet.cosmo.dao.external.UuidExternalGenerator;
 import org.unitedinternet.cosmo.dao.subscription.UuidSubscriptionGenerator;
 import org.unitedinternet.cosmo.model.CollectionItem;
 import org.unitedinternet.cosmo.model.ContentItem;
+import org.unitedinternet.cosmo.model.EventStamp;
 import org.unitedinternet.cosmo.model.ICalendarItem;
 import org.unitedinternet.cosmo.model.Item;
 import org.unitedinternet.cosmo.model.NoteItem;
+import org.unitedinternet.cosmo.model.StampUtils;
 import org.unitedinternet.cosmo.model.User;
 import org.unitedinternet.cosmo.model.filter.EventStampFilter;
 import org.unitedinternet.cosmo.model.filter.NoteItemFilter;
@@ -40,6 +42,7 @@ import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.property.Clazz;
 import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Description;
+
 
 @Service
 public class CalendarManagementService implements CalendarService {
@@ -128,9 +131,16 @@ public class CalendarManagementService implements CalendarService {
     /**
      * method to process the event if it's valid
      */
-    public boolean handleCalendarEvent(VEvent event) {
-        if (isValidManagementEvent(event)) {
-            return processEvent(event);
+    public boolean handleCalendarEvent(ContentItem item) {
+        // Get event
+        EventStamp eventStamp = StampUtils.getEventStamp(item);
+        VEvent masterEvent = eventStamp.getMasterEvent();
+        if (isValidManagementEvent(masterEvent)) {
+            boolean success = processEvent(masterEvent);
+            if (success) {
+                contentDao.updateContent(item);
+            }
+            return success;
         } else {
             return false;
         }

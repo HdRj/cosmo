@@ -13,8 +13,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.unitedinternet.cosmo.model.CollectionItem;
 import org.unitedinternet.cosmo.model.ContentItem;
-import org.unitedinternet.cosmo.model.EventStamp;
-import org.unitedinternet.cosmo.model.StampUtils;
 
 import net.fortuna.ical4j.model.component.VEvent;
 
@@ -43,10 +41,7 @@ public class CalendarManagementEventAddHandler implements EventAddHandler {
     public void beforeAdd(CollectionItem parent, Set<ContentItem> contentItems) {
         // Handle event
         for (ContentItem item : contentItems) {
-            // Get event
-            EventStamp eventStamp = StampUtils.getEventStamp(item);
-            VEvent masterEvent = eventStamp.getMasterEvent();
-            management.handleCalendarEvent(masterEvent);
+            management.handleCalendarEvent(item);
         }
     }
 
