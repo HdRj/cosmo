@@ -1,6 +1,7 @@
 package org.unitedinternet.cosmo.service.impl;
 
 
+import java.lang.Exception;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -138,12 +139,8 @@ public class CalendarManagementService implements CalendarService {
         if (isValidManagementEvent(masterEvent)) {
             boolean success = processEvent(masterEvent);
             if (success) {
-                // Remove the existing event
-                contentDao.removeItem(item);
-                LOG.info("Removed existing event with UID: " + masterEvent.getUid().getValue());
-                // Insert the updated event into the calendar
-                contentDao.addItemToCollection(item, collection);
-                LOG.info("Inserted updated event with UID: " + masterEvent.getUid().getValue());
+                // TODO
+                item.addStamp(eventStamp);
             }
             return success;
         } else {
@@ -163,9 +160,12 @@ public class CalendarManagementService implements CalendarService {
                 LOG.info("Processing share-read");
                 java.util.Calendar calendar = java.util.Calendar.getInstance();
                 SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-                Description description = new Description("======= update (" + format.format(calendar.getTime()) + ") =======");
-                event.getProperties().removeAll(event.getProperties(Property.DESCRIPTION));
-                event.getProperties().add(description);
+                try {
+                    event.getProperty(Property.DESCRIPTION).setValue("======= update (" + format.format(calendar.getTime()) + ") =======");
+                } catch (Exception e) {
+                    LOG.error(e.toString());
+                    return false;
+                }
                 break;
             case COMMAND_SET_NAME:
                 // Process setting calendar name
