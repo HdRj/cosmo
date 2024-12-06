@@ -65,46 +65,38 @@ public class CalendarManagementService implements CalendarService {
     /**
      * management commands names
      */
-    private static final String COMMAND_SHARED_READ = "calendar-manage: share-read";
-    private static final String COMMAND_SHARED_READ_WRITE = "calendar-manage: share-readwrite";
-    private static final String COMMAND_SHARED_WRITE = "calendar-manage: share-write";
-
-    private static final String COMMAND_SET_NAME = "calendar-manage: set-name";
-
-    private static final String COMMAND_ADD_CALENDAR = "calendar-manage: add-calendar";
-
-    private static final String COMMAND_SET_CALENDAR_COLOR = "calendar-manage: set-calendar-colour";
-
-    private static final String COMMAND_SET_CALENDAR_DEFAULT_ALERT = "calendar-manage: set-calendar-default-alert";
-    private static final String COMMAND_SET_CALENDAR_DEFAULT_DURATION = "calendar-manage: set-calendar-default-duration";
-    private static final String COMMAND_SET_CALENDAR_DEFAULT_HOME = "calendar-manage: set-calendar-default-home";
-
-    private static final String COMMAND_SET_CALENDAR_NOTIFICATION_LOCATION = "calendar-manage: set-calendar-notification-location";
-
-    private static final String COMMAND_SET_CALENDAR_TIMEZONE = "calendar-manage: set-calendar-timezone";
-
-    private static final String COMMAND_SET_CALENDAR_LOG_AUDIT = "calendar-manage: set-calendar-log-audit";
-
-    private static final String COMMAND_SET_CALENDAR_NOTIFICATION_DELETES = "calendar-manage: set-calendar-notification-deletes";
+    private static final String CMD_SHARED_READ = "calendar-manage: share-read";
+    private static final String CMD_SHARED_READ_WRITE = "calendar-manage: share-readwrite";
+    private static final String CMD_SHARED_WRITE = "calendar-manage: share-write";
+    private static final String CMD_SET_NAME = "calendar-manage: set-name";
+    private static final String CMD_ADD_CALENDAR = "calendar-manage: add-calendar";
+    private static final String CMD_SET_CALENDAR_COLOR = "calendar-manage: set-calendar-colour";
+    private static final String CMD_SET_CALENDAR_DEFAULT_ALERT = "calendar-manage: set-calendar-default-alert";
+    private static final String CMD_SET_CALENDAR_DEFAULT_DURATION = "calendar-manage: set-calendar-default-duration";
+    private static final String CMD_SET_CALENDAR_DEFAULT_HOME = "calendar-manage: set-calendar-default-home";
+    private static final String CMD_SET_CALENDAR_NOTIFICATION_LOCATION = "calendar-manage: set-calendar-notification-location";
+    private static final String CMD_SET_CALENDAR_TIMEZONE = "calendar-manage: set-calendar-timezone";
+    private static final String CMD_SET_CALENDAR_LOG_AUDIT = "calendar-manage: set-calendar-log-audit";
+    private static final String CMD_SET_CALENDAR_NOTIFICATION_DELETES = "calendar-manage: set-calendar-notification-deletes";
 
 
     /**
      * list of allowed management commands
      */
     private final List<String> allowedCommands = Arrays.asList(
-        COMMAND_SHARED_READ,
-        COMMAND_SHARED_READ_WRITE,
-        COMMAND_SHARED_WRITE,
-        COMMAND_SET_NAME,
-        COMMAND_ADD_CALENDAR,
-        COMMAND_SET_CALENDAR_COLOR,
-        COMMAND_SET_CALENDAR_DEFAULT_ALERT,
-        COMMAND_SET_CALENDAR_DEFAULT_DURATION,
-        COMMAND_SET_CALENDAR_DEFAULT_HOME,
-        COMMAND_SET_CALENDAR_NOTIFICATION_LOCATION,
-        COMMAND_SET_CALENDAR_TIMEZONE,
-        COMMAND_SET_CALENDAR_LOG_AUDIT,
-        COMMAND_SET_CALENDAR_NOTIFICATION_DELETES
+        CMD_SHARED_READ,
+        CMD_SHARED_READ_WRITE,
+        CMD_SHARED_WRITE,
+        CMD_SET_NAME,
+        CMD_ADD_CALENDAR,
+        CMD_SET_CALENDAR_COLOR,
+        CMD_SET_CALENDAR_DEFAULT_ALERT,
+        CMD_SET_CALENDAR_DEFAULT_DURATION,
+        CMD_SET_CALENDAR_DEFAULT_HOME,
+        CMD_SET_CALENDAR_NOTIFICATION_LOCATION,
+        CMD_SET_CALENDAR_TIMEZONE,
+        CMD_SET_CALENDAR_LOG_AUDIT,
+        CMD_SET_CALENDAR_NOTIFICATION_DELETES
     );
 
     /**
@@ -155,7 +147,7 @@ public class CalendarManagementService implements CalendarService {
         // Based on the event's SUMMARY, process the management command
         String summary = event.getSummary().getValue().trim();
         switch (summary) {
-            case COMMAND_SHARED_READ:
+            case CMD_SHARED_READ:
                 // Process sharing read permissions
                 LOG.info("Processing share-read");
                 java.util.Calendar calendar = java.util.Calendar.getInstance();
@@ -167,11 +159,11 @@ public class CalendarManagementService implements CalendarService {
                     return false;
                 }
                 break;
-            case COMMAND_SET_NAME:
+            case CMD_SET_NAME:
                 // Process setting calendar name
                 LOG.info("Processing set-name");
                 break;
-            case COMMAND_ADD_CALENDAR:
+            case CMD_ADD_CALENDAR:
                 // Process adding a new calendar
                 LOG.info("Processing add-calendar");
                 break;
