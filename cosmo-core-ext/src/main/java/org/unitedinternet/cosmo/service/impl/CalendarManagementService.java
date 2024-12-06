@@ -61,38 +61,45 @@ public class CalendarManagementService implements CalendarService {
     /**
      * management commands names
      */
+    private static final String CMD_HELP = "calendar-manage: help";
     private static final String CMD_SHARED_READ = "calendar-manage: share-read";
     private static final String CMD_SHARED_READ_WRITE = "calendar-manage: share-readwrite";
     private static final String CMD_SHARED_WRITE = "calendar-manage: share-write";
     private static final String CMD_SET_NAME = "calendar-manage: set-name";
-    private static final String CMD_ADD_CALENDAR = "calendar-manage: add-calendar";
-    private static final String CMD_SET_CALENDAR_COLOR = "calendar-manage: set-calendar-colour";
-    private static final String CMD_SET_CALENDAR_DEFAULT_ALERT = "calendar-manage: set-calendar-default-alert";
-    private static final String CMD_SET_CALENDAR_DEFAULT_DURATION = "calendar-manage: set-calendar-default-duration";
-    private static final String CMD_SET_CALENDAR_DEFAULT_HOME = "calendar-manage: set-calendar-default-home";
-    private static final String CMD_SET_CALENDAR_NOTIFICATION_LOCATION = "calendar-manage: set-calendar-notification-location";
-    private static final String CMD_SET_CALENDAR_TIMEZONE = "calendar-manage: set-calendar-timezone";
-    private static final String CMD_SET_CALENDAR_LOG_AUDIT = "calendar-manage: set-calendar-log-audit";
-    private static final String CMD_SET_CALENDAR_NOTIFICATION_DELETES = "calendar-manage: set-calendar-notification-deletes";
+    private static final String CMD_SET_DEFAULT_CAL = "calendar-manage: set-default-calendar";
+    private static final String CMD_DOM_INV = "calendar-manage: allow-domain-invites";
+    private static final String CMD_ADD_CAL = "calendar-manage: add-calendar";
+
+    private static final String CMD_SET_CAL_COLOUR = "calendar-manage: set-calendar-colour";
+    private static final String CMD_SET_CAL_DEFAULT_ALERT = "calendar-manage: set-calendar-default-alert";
+    private static final String CMD_SET_CAL_DEFAULT_DURATION = "calendar-manage: set-calendar-default-duration";
+    private static final String CMD_SET_CAL_DEFAULT_HOME = "calendar-manage: set-calendar-default-home";
+    private static final String CMD_SET_CAL_NOTIFICATION_LOCATION = "calendar-manage: set-calendar-notification-location";
+    private static final String CMD_SET_CAL_TIMEZONE = "calendar-manage: set-calendar-timezone";
+    private static final String CMD_SET_CAL_LOG_AUDIT = "calendar-manage: set-calendar-log-audit";
+    private static final String CMD_SET_CAL_NOTIFICATION_DELETES = "calendar-manage: set-calendar-notification-deletes";
 
 
     /**
      * list of allowed management commands
      */
     private final List<String> allowedCommands = Arrays.asList(
+        CMD_HELP,
         CMD_SHARED_READ,
         CMD_SHARED_READ_WRITE,
         CMD_SHARED_WRITE,
         CMD_SET_NAME,
-        CMD_ADD_CALENDAR,
-        CMD_SET_CALENDAR_COLOR,
-        CMD_SET_CALENDAR_DEFAULT_ALERT,
-        CMD_SET_CALENDAR_DEFAULT_DURATION,
-        CMD_SET_CALENDAR_DEFAULT_HOME,
-        CMD_SET_CALENDAR_NOTIFICATION_LOCATION,
-        CMD_SET_CALENDAR_TIMEZONE,
-        CMD_SET_CALENDAR_LOG_AUDIT,
-        CMD_SET_CALENDAR_NOTIFICATION_DELETES
+        CMD_SET_DEFAULT_CAL,
+        CMD_DOM_INV,
+        CMD_ADD_CAL,
+        CMD_SET_CAL_COLOUR,
+        CMD_SET_CAL_DEFAULT_ALERT,
+        CMD_SET_CAL_DEFAULT_DURATION,
+        CMD_SET_CAL_DEFAULT_HOME,
+        CMD_SET_CAL_NOTIFICATION_LOCATION,
+        CMD_SET_CAL_TIMEZONE,
+        CMD_SET_CAL_LOG_AUDIT,
+        CMD_SET_CAL_NOTIFICATION_DELETES
     );
 
     /**
@@ -148,24 +155,20 @@ public class CalendarManagementService implements CalendarService {
         // Based on the event's SUMMARY, process the management command
         String summary = event.getSummary().getValue().trim();
         switch (summary) {
+            case CMD_HELP:
+                LOG.info("Processing help");
+                updateDescription(event,"Available commands\n\n"+String.join("\n",allowedCommands));
+                break;
             case CMD_SHARED_READ:
                 // Process sharing read permissions
                 LOG.info("Processing share-read");
-                java.util.Calendar calendar = java.util.Calendar.getInstance();
-                SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-                try {
-                    Property description = event.getProperty(Property.DESCRIPTION);
-                    description.setValue(description.getValue() + "======= update (" + format.format(calendar.getTime()) + ") =======");
-                } catch (Exception e) {
-                    LOG.error(e.toString());
-                    return false;
-                }
+                updateDescription(event,"testing");
                 break;
             case CMD_SET_NAME:
                 // Process setting calendar name
                 LOG.info("Processing set-name");
                 break;
-            case CMD_ADD_CALENDAR:
+            case CMD_ADD_CAL:
                 // Process adding a new calendar
                 LOG.info("Processing add-calendar");
                 break;
@@ -177,6 +180,21 @@ public class CalendarManagementService implements CalendarService {
         return true;
     }
 
+    /**
+     * method to update events description with result
+     */
+    public void updateDescription(VEvent event, String text) {
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        try {
+            Property description = event.getProperty(Property.DESCRIPTION);
+            description.setValue(description.getValue() + "\n\n======= update (" + format.format(calendar.getTime()) + ") =======\n");
+            description.setValue(description.getValue() + text);
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            //return false;
+        }
+    }
 
     @Override
     public Set<Item> findEvents(CollectionItem collection, Date rangeStart, Date rangeEnd, String timeZoneId,
