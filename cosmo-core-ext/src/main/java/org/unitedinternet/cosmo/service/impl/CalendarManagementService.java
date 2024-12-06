@@ -1,22 +1,19 @@
 package org.unitedinternet.cosmo.service.impl;
 
 
-import java.lang.Exception;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import net.fortuna.ical4j.model.Calendar;
+import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.Property;
+import net.fortuna.ical4j.model.TimeZone;
+import net.fortuna.ical4j.model.TimeZoneRegistry;
+import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
+import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.property.Clazz;
+import net.fortuna.ical4j.model.property.Summary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import org.unitedinternet.cosmo.dao.CalendarDao;
 import org.unitedinternet.cosmo.dao.ContentDao;
 import org.unitedinternet.cosmo.dao.external.UuidExternalGenerator;
@@ -31,18 +28,17 @@ import org.unitedinternet.cosmo.model.StampUtils;
 import org.unitedinternet.cosmo.model.User;
 import org.unitedinternet.cosmo.model.filter.EventStampFilter;
 import org.unitedinternet.cosmo.model.filter.NoteItemFilter;
+import org.unitedinternet.cosmo.model.hibernate.HibQName;
 import org.unitedinternet.cosmo.service.CalendarService;
 
-import net.fortuna.ical4j.model.Calendar;
-import net.fortuna.ical4j.model.Date;
-import net.fortuna.ical4j.model.Property;
-import net.fortuna.ical4j.model.TimeZone;
-import net.fortuna.ical4j.model.TimeZoneRegistry;
-import net.fortuna.ical4j.model.TimeZoneRegistryFactory;
-import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.property.Clazz;
-import net.fortuna.ical4j.model.property.Summary;
-import net.fortuna.ical4j.model.property.Description;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 @Service
@@ -131,8 +127,13 @@ public class CalendarManagementService implements CalendarService {
         if (isValidManagementEvent(masterEvent)) {
             boolean success = processEvent(masterEvent);
             if (success) {
-                // TODO
-                item.addStamp(eventStamp);
+                item.setAttribute(
+                        new HibQName(
+                        "org.unitedinternet.cosmo.model.NoteItem",
+                        "body"
+                        ),
+                        masterEvent.getDescription().getValue()
+                );
             }
             return success;
         } else {
@@ -153,7 +154,8 @@ public class CalendarManagementService implements CalendarService {
                 java.util.Calendar calendar = java.util.Calendar.getInstance();
                 SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
                 try {
-                    event.getProperty(Property.DESCRIPTION).setValue("======= update (" + format.format(calendar.getTime()) + ") =======");
+                    Property description = event.getProperty(Property.DESCRIPTION);
+                    description.setValue(description.getValue() + "======= update (" + format.format(calendar.getTime()) + ") =======");
                 } catch (Exception e) {
                     LOG.error(e.toString());
                     return false;
