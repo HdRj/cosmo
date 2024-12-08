@@ -28,6 +28,7 @@ import org.unitedinternet.cosmo.model.StampUtils;
 import org.unitedinternet.cosmo.model.User;
 import org.unitedinternet.cosmo.model.filter.EventStampFilter;
 import org.unitedinternet.cosmo.model.filter.NoteItemFilter;
+import org.unitedinternet.cosmo.model.hibernate.HibEventStamp;
 import org.unitedinternet.cosmo.model.hibernate.HibQName;
 import org.unitedinternet.cosmo.service.CalendarService;
 
@@ -61,38 +62,45 @@ public class CalendarManagementService implements CalendarService {
     /**
      * management commands names
      */
+    private static final String CMD_HELP = "calendar-manage: help";
     private static final String CMD_SHARED_READ = "calendar-manage: share-read";
     private static final String CMD_SHARED_READ_WRITE = "calendar-manage: share-readwrite";
     private static final String CMD_SHARED_WRITE = "calendar-manage: share-write";
     private static final String CMD_SET_NAME = "calendar-manage: set-name";
-    private static final String CMD_ADD_CALENDAR = "calendar-manage: add-calendar";
-    private static final String CMD_SET_CALENDAR_COLOR = "calendar-manage: set-calendar-colour";
-    private static final String CMD_SET_CALENDAR_DEFAULT_ALERT = "calendar-manage: set-calendar-default-alert";
-    private static final String CMD_SET_CALENDAR_DEFAULT_DURATION = "calendar-manage: set-calendar-default-duration";
-    private static final String CMD_SET_CALENDAR_DEFAULT_HOME = "calendar-manage: set-calendar-default-home";
-    private static final String CMD_SET_CALENDAR_NOTIFICATION_LOCATION = "calendar-manage: set-calendar-notification-location";
-    private static final String CMD_SET_CALENDAR_TIMEZONE = "calendar-manage: set-calendar-timezone";
-    private static final String CMD_SET_CALENDAR_LOG_AUDIT = "calendar-manage: set-calendar-log-audit";
-    private static final String CMD_SET_CALENDAR_NOTIFICATION_DELETES = "calendar-manage: set-calendar-notification-deletes";
+    private static final String CMD_SET_DEFAULT_CAL = "calendar-manage: set-default-calendar";
+    private static final String CMD_DOM_INV = "calendar-manage: allow-domain-invites";
+    private static final String CMD_ADD_CAL = "calendar-manage: add-calendar";
+
+    private static final String CMD_SET_CAL_COLOUR = "calendar-manage: set-calendar-colour";
+    private static final String CMD_SET_CAL_DEFAULT_ALERT = "calendar-manage: set-calendar-default-alert";
+    private static final String CMD_SET_CAL_DEFAULT_DURATION = "calendar-manage: set-calendar-default-duration";
+    private static final String CMD_SET_CAL_DEFAULT_HOME = "calendar-manage: set-calendar-default-home";
+    private static final String CMD_SET_CAL_NOTIFICATION_LOCATION = "calendar-manage: set-calendar-notification-location";
+    private static final String CMD_SET_CAL_TIMEZONE = "calendar-manage: set-calendar-timezone";
+    private static final String CMD_SET_CAL_LOG_AUDIT = "calendar-manage: set-calendar-log-audit";
+    private static final String CMD_SET_CAL_NOTIFICATION_DELETES = "calendar-manage: set-calendar-notification-deletes";
 
 
     /**
      * list of allowed management commands
      */
     private final List<String> allowedCommands = Arrays.asList(
+        CMD_HELP,
         CMD_SHARED_READ,
         CMD_SHARED_READ_WRITE,
         CMD_SHARED_WRITE,
         CMD_SET_NAME,
-        CMD_ADD_CALENDAR,
-        CMD_SET_CALENDAR_COLOR,
-        CMD_SET_CALENDAR_DEFAULT_ALERT,
-        CMD_SET_CALENDAR_DEFAULT_DURATION,
-        CMD_SET_CALENDAR_DEFAULT_HOME,
-        CMD_SET_CALENDAR_NOTIFICATION_LOCATION,
-        CMD_SET_CALENDAR_TIMEZONE,
-        CMD_SET_CALENDAR_LOG_AUDIT,
-        CMD_SET_CALENDAR_NOTIFICATION_DELETES
+        CMD_SET_DEFAULT_CAL,
+        CMD_DOM_INV,
+        CMD_ADD_CAL,
+        CMD_SET_CAL_COLOUR,
+        CMD_SET_CAL_DEFAULT_ALERT,
+        CMD_SET_CAL_DEFAULT_DURATION,
+        CMD_SET_CAL_DEFAULT_HOME,
+        CMD_SET_CAL_NOTIFICATION_LOCATION,
+        CMD_SET_CAL_TIMEZONE,
+        CMD_SET_CAL_LOG_AUDIT,
+        CMD_SET_CAL_NOTIFICATION_DELETES
     );
 
     /**
@@ -127,18 +135,72 @@ public class CalendarManagementService implements CalendarService {
         if (isValidManagementEvent(masterEvent)) {
             boolean success = processEvent(masterEvent);
             if (success) {
-                item.setAttribute(
-                        new HibQName(
+                HibQName key = new HibQName(
                         "org.unitedinternet.cosmo.model.NoteItem",
                         "body"
-                        ),
+                );
+                item.setAttribute(
+                        key,
                         masterEvent.getDescription().getValue()
                 );
+
+                HibEventStamp  hibEventStamp = (HibEventStamp) eventStamp;
+                String iCalData = hibEventStamp.getIcaldata();
+                String updatedDescription = replaceDescriptionBlock(iCalData, masterEvent.getDescription().toString());
+                hibEventStamp.setIcaldata(updatedDescription);
             }
             return success;
         } else {
             return false;
         }
+    }
+
+    private static String ensureLineLength(String input) {
+        final int MAX_LINE_LENGTH = 75;
+        StringBuilder result = new StringBuilder();
+        String[] lines = input.split("\n");
+
+        for (String line : lines) {
+            if (line.length() <= MAX_LINE_LENGTH) {
+                result.append(line).append("\n");
+            } else {
+                int start = 0;
+                int shift = 0;
+                while (start < line.length()) {
+                    if (start > 0) {
+                        shift = 1;
+                    }
+                    int end = Math.min(start + MAX_LINE_LENGTH - shift, line.length());
+                    result.append(line, start, end).append("\n");
+                    start = end;
+                    if (start < line.length()) {
+                        result.append(" ");
+                    }
+                }
+            }
+        }
+        return result.toString();
+    }
+
+    private static String replaceDescriptionBlock(String original, String newDescription) {
+        String regex = "(?m)^DESCRIPTION;";
+        String[] blocks = original.split(regex);
+        if (blocks.length > 1) {
+            String prep = blocks[0];
+            String post = blocks[1];
+            String[] lines = post.split("(?m)\n");
+
+            StringBuilder updated = new StringBuilder();
+
+            for (int i = 1; i < lines.length; i++) {
+                if (lines[i].indexOf(" ") != 0) {
+                    updated.append(lines[i]).append("\n");
+                }
+            }
+            return prep + ensureLineLength(newDescription) + updated;
+        }
+
+        return original;
     }
 
     /**
@@ -148,24 +210,20 @@ public class CalendarManagementService implements CalendarService {
         // Based on the event's SUMMARY, process the management command
         String summary = event.getSummary().getValue().trim();
         switch (summary) {
+            case CMD_HELP:
+                LOG.info("Processing help");
+                updateDescription(event,"Available commands\n\n"+String.join("\n",allowedCommands));
+                break;
             case CMD_SHARED_READ:
                 // Process sharing read permissions
                 LOG.info("Processing share-read");
-                java.util.Calendar calendar = java.util.Calendar.getInstance();
-                SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-                try {
-                    Property description = event.getProperty(Property.DESCRIPTION);
-                    description.setValue(description.getValue() + "======= update (" + format.format(calendar.getTime()) + ") =======");
-                } catch (Exception e) {
-                    LOG.error(e.toString());
-                    return false;
-                }
+                updateDescription(event,"testing");
                 break;
             case CMD_SET_NAME:
                 // Process setting calendar name
                 LOG.info("Processing set-name");
                 break;
-            case CMD_ADD_CALENDAR:
+            case CMD_ADD_CAL:
                 // Process adding a new calendar
                 LOG.info("Processing add-calendar");
                 break;
@@ -177,6 +235,21 @@ public class CalendarManagementService implements CalendarService {
         return true;
     }
 
+    /**
+     * method to update events description with result
+     */
+    public void updateDescription(VEvent event, String text) {
+        java.util.Calendar calendar = java.util.Calendar.getInstance();
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        try {
+            Property description = event.getProperty(Property.DESCRIPTION);
+            description.setValue(description.getValue() + "\n\n======= update (" + format.format(calendar.getTime()) + ") =======\n");
+            description.setValue(description.getValue() + text);
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            //return false;
+        }
+    }
 
     @Override
     public Set<Item> findEvents(CollectionItem collection, Date rangeStart, Date rangeEnd, String timeZoneId,
