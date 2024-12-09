@@ -183,23 +183,34 @@ public class CalendarManagementService implements CalendarService {
     }
 
     private static String replaceDescriptionBlock(String original, String newDescription) {
-        String regex = "(?m)^DESCRIPTION;";
-        String[] blocks = original.split(regex);
-        if (blocks.length > 1) {
-            String prep = blocks[0];
-            String post = blocks[1];
+        int vEventBlockStart = original.indexOf("BEGIN:VEVENT");
+        int vEventBlockEnd = original.indexOf("END:VEVENT");
+    
+        String vEventBlock = original.substring(vEventBlockStart, vEventBlockEnd);
+    
+        int descriptionStart = vEventBlock.indexOf("DESCRIPTION");
+    
+        if (descriptionStart > -1) {
+            String prep = original.substring(0, vEventBlockStart + descriptionStart);
+            String post = vEventBlock.substring(descriptionStart);
+    
             String[] lines = post.split("(?m)\n");
-
+    
             StringBuilder updated = new StringBuilder();
-
+            boolean multiline = true;
             for (int i = 1; i < lines.length; i++) {
-                if (lines[i].indexOf(" ") != 0) {
+                if (multiline) {
+                    multiline = lines[i].indexOf(" ") == 0;
+                }
+    
+                if (!multiline) {
                     updated.append(lines[i]).append("\n");
                 }
             }
-            return prep + ensureLineLength(newDescription) + updated;
+    
+            return prep + ensureLineLength(newDescription) + updated + original.substring(vEventBlockEnd);
         }
-
+    
         return original;
     }
 
