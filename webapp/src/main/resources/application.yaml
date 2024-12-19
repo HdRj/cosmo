@@ -94,6 +94,9 @@ ldap:
     search-scope: BASE
     filter: (&(objectClass=account)(uid=%u))
     attribute: uid,o
+  pool:
+    size: 5
+    health-check-interval: 30000
   email:
     manager:
       username: ~
