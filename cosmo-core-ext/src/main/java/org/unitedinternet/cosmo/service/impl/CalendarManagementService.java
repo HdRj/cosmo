@@ -222,23 +222,17 @@ public class CalendarManagementService implements CalendarService {
         String summary = event.getSummary().getValue().trim();
         switch (summary) {
             case CMD_HELP:
-                LOG.info("Processing help");
                 updateDescription(event,"Available commands\n\n"+String.join("\n",allowedCommands));
                 break;
+            case CMD_SET_CAL_COLOUR:
+                break;
             case CMD_SHARED_READ:
-                // Process sharing read permissions
-                LOG.info("Processing share-read");
                 updateDescription(event,"testing");
                 break;
             case CMD_SET_NAME:
-                // Process setting calendar name
-                LOG.info("Processing set-name");
                 break;
             case CMD_ADD_CAL:
-                // Process adding a new calendar
-                LOG.info("Processing add-calendar");
                 break;
-            // Add other cases for different management commands
             default:
                 LOG.error("Unsupported management command: " + summary);
                 return false;
