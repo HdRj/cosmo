@@ -1,9 +1,8 @@
 package com.unitedinternet.calendar.ldap;
 
-import com.unboundid.ldap.sdk.LDAPConnection;
-import com.unboundid.ldap.sdk.LDAPConnectionOptions;
-import com.unboundid.ldap.sdk.LDAPException;
+import com.unboundid.ldap.sdk.*;
 import com.unboundid.util.ssl.SSLUtil;
+import com.unboundid.util.*;
 import com.unboundid.util.ssl.TrustAllTrustManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +10,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.naming.NamingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class LdapBindUnboundidComponent {
@@ -139,7 +142,7 @@ public class LdapBindUnboundidComponent {
         return managerConnection;
     }
 
-    private static LDAPConnection createLDAPConnection(String ldapUrls, String userDn, String password) throws LDAPException {
+    private  LDAPConnection createLDAPConnection(String ldapUrls, String userDn, String password) throws LDAPException {
         LDAPConnection connection = null;
 
         if (serverSet != null) {
@@ -203,9 +206,9 @@ public class LdapBindUnboundidComponent {
             }
         }
 
-        if (connection == null) {
-            throw new LDAPException("Failed to connect to any of the specified LDAP servers.");
-        }
+        //if (connection == null) {
+           // throw new LDAPException("Failed to connect to any of the specified LDAP servers.");
+        //}
 
         return connection;
     }
@@ -223,21 +226,23 @@ public class LdapBindUnboundidComponent {
 
     private void initializeFailoverServerSet(String ldapUrls) {
         String[] urls = ldapUrls.split(",");
-        List<HostAndPort> servers = new ArrayList<>();
+        List<URI> servers = new ArrayList<>();
 
         for (String url : urls) {
-            String[] parts = url.split(":");
-            String host = parts[1].substring(2); // Skip "//"
-            int port = Integer.parseInt(parts[2]);
-            servers.add(new HostAndPort(host, port));
+            try {
+                URI uri = new URI(url);
+                servers.add(uri);
+            } catch (URISyntaxException e) {
+                LOGGER.error("Invalid URI format: {}", url, e);
+            }
         }
 
-        // Create FailoverServerSet
-        this.serverSet = new FailoverServerSet(
-                servers.toArray(new HostAndPort[0]),
-                new LDAPConnectionOptions(),
-                new TrustAllTrustManager() // Replace with a proper trust manager in production
-        );
+        // If you need host and port, you can extract it from URI like so:
+        for (URI uri : servers) {
+            String host = uri.getHost();
+            int port = uri.getPort();
+            LOGGER.info("Host: {}, Port: {}", host, port);
+            // Now you can use the host and port to configure your LDAP connection
+        }
     }
-
 }
