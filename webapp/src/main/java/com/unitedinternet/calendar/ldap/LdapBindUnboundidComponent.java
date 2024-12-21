@@ -142,7 +142,7 @@ public class LdapBindUnboundidComponent {
         return managerConnection;
     }
 
-    private  LDAPConnection createLDAPConnection(String ldapUrls, String userDn, String password) throws LDAPException {
+    private LDAPConnection createLDAPConnection(String ldapUrls, String userDn, String password) throws LDAPException {
         LDAPConnection connection = null;
 
         if (serverSet != null) {
@@ -157,26 +157,27 @@ public class LdapBindUnboundidComponent {
             }
         }
 
-        // Fall back to iterating over provided URLs
+        // Fallback to connecting using the provided URLs
         String[] urls = ldapUrls.split(",");
         CustomNameResolver customNameResolver = new CustomNameResolver("192.168.30."); // Custom resolver
         String host = null;
         int port = -1;
 
+        // Iterate over each provided URL and attempt to establish a connection
         for (String url : urls) {
             try {
                 String[] parts = url.split(":");
-                boolean useSSL = parts[0].startsWith("ldaps");
-                host = parts[1].substring(2); // Skip "//"
+                boolean useSSL = parts[0].startsWith("ldaps");  // Check if SSL is required
+                host = parts[1].substring(2); // Skip "//" in the URL
                 port = Integer.parseInt(parts[2]);
 
                 LDAPConnectionOptions options = new LDAPConnectionOptions();
                 options.setUseSynchronousMode(true);
 
                 if (useSSL) {
-                    // Resolve hostname manually
+                    // Resolve the host manually if SSL is used
                     String resolvedHost = customNameResolver.resolve(host);
-                    SSLUtil sslUtil = new SSLUtil(new TrustAllTrustManager()); // No CustomNameResolver here
+                    SSLUtil sslUtil = new SSLUtil(new TrustAllTrustManager()); // No CustomNameResolver here for SSL
                     connection = new LDAPConnection(
                             sslUtil.createSSLSocketFactory(), // SSLSocketFactory
                             resolvedHost,                     // Resolved host
@@ -185,7 +186,7 @@ public class LdapBindUnboundidComponent {
                             password                          // Password
                     );
                 } else {
-                    // Resolve hostname manually and create a non-SSL connection
+                    // Resolve the host manually and create a non-SSL connection
                     String resolvedHost = customNameResolver.resolve(host);
                     connection = new LDAPConnection(
                             resolvedHost, // Resolved host
@@ -202,13 +203,15 @@ public class LdapBindUnboundidComponent {
             } catch (GeneralSecurityException e) {
                 throw new RuntimeException("Failed to initialize SSL for connection to " + host + ":" + port, e);
             } catch (UnknownHostException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Host resolution failed for: " + host, e);
             }
         }
 
-        //if (connection == null) {
-           // throw new LDAPException("Failed to connect to any of the specified LDAP servers.");
-        //}
+        // If no connection was established, throw an exception
+        if (connection == null) {
+            LOGGER.error("Failed to connect to any of the specified LDAP servers.");
+            throw new LDAPException(ResultCode.CONNECT_ERROR, "Failed to connect to any of the specified LDAP servers.");
+        }
 
         return connection;
     }
@@ -228,16 +231,18 @@ public class LdapBindUnboundidComponent {
         String[] urls = ldapUrls.split(",");
         List<URI> servers = new ArrayList<>();
 
+        // Process each provided URL and convert it to a URI
         for (String url : urls) {
             try {
                 URI uri = new URI(url);
                 servers.add(uri);
+                LOGGER.info("Configured server URI: " + uri.toString());
             } catch (URISyntaxException e) {
                 LOGGER.error("Invalid URI format: {}", url, e);
             }
         }
 
-        // If you need host and port, you can extract it from URI like so:
+        // Extract host and port from the URI for each server
         for (URI uri : servers) {
             String host = uri.getHost();
             int port = uri.getPort();
