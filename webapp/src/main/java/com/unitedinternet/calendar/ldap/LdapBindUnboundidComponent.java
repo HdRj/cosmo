@@ -221,7 +221,8 @@ public class LdapBindUnboundidComponent {
         int retryDelay = 2000; // 2 seconds
 
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
-            return createLDAPConnection(ldapUrls, userDn, password);
+            if(serverSet.getConnection()==null){
+                return createLDAPConnection(ldapUrls, userDn, password);}
         }
         LOGGER.error("Exhausted all retries to connect to LDAP server.");
         return null;
