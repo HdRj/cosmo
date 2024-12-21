@@ -11,12 +11,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.naming.NamingException;
+import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 
 @Component
 public class LdapBindUnboundidComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LdapBindUnboundidComponent.class);
+
+    private ServerSet serverSet;
 
     private String ldapAuthBase;
 
@@ -56,6 +59,8 @@ public class LdapBindUnboundidComponent {
         this.managerEmailUsername=managerEmailUsername;
         this.managerEmailPassword=managerEmailPassword;
         this.ldapTlsReqcert = ldapTlsReqcert;
+
+        initializeFailoverServerSet(ldapUrls); // Initialize the FailoverServerSet
     }
 
     public LDAPConnection userConnectByUserDn(String userDn, String password) throws NamingException {
@@ -113,58 +118,126 @@ public class LdapBindUnboundidComponent {
     }
 
     public LDAPConnection managerConnect(String userName, String password) {
+        if (managerConnection != null && managerConnection.isConnected()) {
+            if (userDn.equals(userName)) {
+                LOGGER.info("Reusing existing manager connection");
+                return managerConnection;
+            }
+        }
+
         try {
-            managerConnection = createLDAPConnection(ldapUrls, userName, password);
-            if(managerConnection!=null) {
+            LOGGER.info("Reconnecting manager connection...");
+            managerConnection = retryConnection(userName, password);
+            if (managerConnection != null) {
                 userDn = userName;
-                LOGGER.info("LDAP manager bind successful...");
+                LOGGER.info("LDAP manager bind successful");
             }
         } catch (Exception e) {
             LOGGER.error("LDAP manager bind failed: {}", e.getMessage());
-            return null;
+            managerConnection = null;
         }
         return managerConnection;
     }
 
-    private static LDAPConnection createLDAPConnection( String ldapUrls, String userDn, String password) {
+    private static LDAPConnection createLDAPConnection(String ldapUrls, String userDn, String password) throws LDAPException {
         LDAPConnection connection = null;
 
-        String [] urls = ldapUrls.split(",");
+        if (serverSet != null) {
+            // Use FailoverServerSet if it is initialized
+            try {
+                connection = serverSet.getConnection();
+                connection.bind(userDn, password);
+                LOGGER.info("Connected to LDAP server via FailoverServerSet");
+                return connection;
+            } catch (LDAPException e) {
+                LOGGER.error("FailoverServerSet connection failed: " + e.getMessage());
+            }
+        }
+
+        // Fall back to iterating over provided URLs
+        String[] urls = ldapUrls.split(",");
+        CustomNameResolver customNameResolver = new CustomNameResolver("192.168.30."); // Custom resolver
         String host = null;
         int port = -1;
-        for (int i = 0; i < urls.length; i++) {
+
+        for (String url : urls) {
             try {
-                String [] parts = urls[i].split(":");
-                boolean useSSL = false;
-                if(parts[0].startsWith("ldaps")){
-                    useSSL = true;
-                }
-                host = parts[1].substring(2);
+                String[] parts = url.split(":");
+                boolean useSSL = parts[0].startsWith("ldaps");
+                host = parts[1].substring(2); // Skip "//"
                 port = Integer.parseInt(parts[2]);
+
                 LDAPConnectionOptions options = new LDAPConnectionOptions();
                 options.setUseSynchronousMode(true);
 
                 if (useSSL) {
-                    SSLUtil sslUtil = new SSLUtil(new TrustAllTrustManager());
-                    connection = new LDAPConnection(sslUtil.createSSLSocketFactory(), host, port, userDn, password);
+                    // Resolve hostname manually
+                    String resolvedHost = customNameResolver.resolve(host);
+                    SSLUtil sslUtil = new SSLUtil(new TrustAllTrustManager()); // No CustomNameResolver here
+                    connection = new LDAPConnection(
+                            sslUtil.createSSLSocketFactory(), // SSLSocketFactory
+                            resolvedHost,                     // Resolved host
+                            port,                             // Port
+                            userDn,                           // User DN
+                            password                          // Password
+                    );
                 } else {
-                    connection = new LDAPConnection(host, port, userDn, password);
+                    // Resolve hostname manually and create a non-SSL connection
+                    String resolvedHost = customNameResolver.resolve(host);
+                    connection = new LDAPConnection(
+                            resolvedHost, // Resolved host
+                            port,         // Port
+                            userDn,       // User DN
+                            password      // Password
+                    );
                 }
 
                 LOGGER.info("Connected to " + host + ":" + port);
                 break;
             } catch (LDAPException e) {
-                LOGGER.error("Failed to connect to " + host + ":" + port + " " + e.getMessage());
+                LOGGER.error("Failed to connect to " + host + ":" + port + " - " + e.getMessage());
             } catch (GeneralSecurityException e) {
+                throw new RuntimeException("Failed to initialize SSL for connection to " + host + ":" + port, e);
+            } catch (UnknownHostException e) {
                 throw new RuntimeException(e);
             }
         }
 
         if (connection == null) {
-            System.err.println("Failed to connect to any of the specified ports.");
+            throw new LDAPException("Failed to connect to any of the specified LDAP servers.");
         }
 
         return connection;
+    }
+
+    public LDAPConnection retryConnection( String userDn, String password) throws LDAPException {
+        int maxRetries = 5;
+        int retryDelay = 2000; // 2 seconds
+
+        for (int attempt = 1; attempt <= maxRetries; attempt++) {
+            return createLDAPConnection(ldapUrls, userDn, password);
+        }
+        LOGGER.error("Exhausted all retries to connect to LDAP server.");
+        return null;
+    }
+
+    private void initializeFailoverServerSet(String ldapUrls) {
+        String[] urls = ldapUrls.split(",");
+        List<HostAndPort> servers = new ArrayList<>();
+
+        for (String url : urls) {
+            String[] parts = url.split(":");
+            String host = parts[1].substring(2); // Skip "//"
+            int port = Integer.parseInt(parts[2]);
+            servers.add(new HostAndPort(host, port));
+        }
+
+        // Create FailoverServerSet
+        this.serverSet = new FailoverServerSet(
+                servers.toArray(new HostAndPort[0]),
+                new LDAPConnectionOptions(),
+                new TrustAllTrustManager() // Replace with a proper trust manager in production
+        );
     }
 
 }

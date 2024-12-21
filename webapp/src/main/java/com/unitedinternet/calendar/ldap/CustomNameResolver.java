@@ -1,12 +1,16 @@
 package com.unitedinternet.calendar.ldap;
+
+
+
+import com.unboundid.ldap.sdk.NameResolver;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class CustomNameResolver {
+public class CustomNameResolver extends NameResolver {
 
     private final String localNetworkPrefix; // Example: "192.168.30."
 
@@ -14,18 +18,31 @@ public class CustomNameResolver {
         this.localNetworkPrefix = localNetworkPrefix;
     }
 
-    /**
-     * Resolve and prioritize IP addresses.
-     *
-     * @param hostname The hostname to resolve.
-     * @return A prioritized list of IP addresses.
-     * @throws UnknownHostException If hostname resolution fails.
-     */
-    public List<InetAddress> resolve(String hostname) throws UnknownHostException {
-        // Get all IP addresses for the hostname
-        InetAddress[] allAddresses = InetAddress.getAllByName(hostname);
+    @Override
+    public InetAddress getByName(String host) throws UnknownHostException {
+        List<InetAddress> prioritizedAddresses = resolveAndPrioritize(host);
+        if (!prioritizedAddresses.isEmpty()) {
+            return prioritizedAddresses.get(0); // Return the first (prioritized) address.
+        }
+        throw new UnknownHostException("No suitable IP address found for hostname: " + host);
+    }
 
-        // Separate into "same network" and "other network" groups
+    @Override
+    public InetAddress[] getAllByName(String host) throws UnknownHostException {
+        List<InetAddress> prioritizedAddresses = resolveAndPrioritize(host);
+        return prioritizedAddresses.toArray(new InetAddress[0]);
+    }
+
+    @Override
+    public void toString(StringBuilder stringBuilder) {
+
+    }
+
+    private List<InetAddress> resolveAndPrioritize(String host) throws UnknownHostException {
+        // Resolve all addresses for the given hostname.
+        InetAddress[] allAddresses = InetAddress.getAllByName(host);
+
+        // Separate into "same network" and "other network" groups.
         List<InetAddress> sameNetwork = new ArrayList<>();
         List<InetAddress> otherNetwork = new ArrayList<>();
 
@@ -38,7 +55,7 @@ public class CustomNameResolver {
             }
         }
 
-        // Combine "same network" and "other network" lists
+        // Combine "same network" and "other network" lists.
         List<InetAddress> sortedAddresses = new ArrayList<>();
         sortedAddresses.addAll(sameNetwork);
         sortedAddresses.addAll(otherNetwork);
@@ -46,25 +63,8 @@ public class CustomNameResolver {
         return sortedAddresses;
     }
 
-    public static void main(String[] args) {
-        try {
-            // Define the local network prefix (192.168.30.x in this case)
-            String localNetworkPrefix = "192.168.30.";
-
-            // Create a resolver instance
-            CustomNameResolver resolver = new CustomNameResolver(localNetworkPrefix);
-
-            // Test with the hostname "dnstest.kempo.eu"
-            List<InetAddress> sortedAddresses = resolver.resolve("dnstest.kempo.eu");
-
-            // Print the sorted addresses
-            System.out.println("Prioritized IP Addresses:");
-            for (InetAddress address : sortedAddresses) {
-                System.out.println(address.getHostAddress());
-            }
-
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+    public String resolve(String host) throws UnknownHostException {
+        InetAddress resolvedAddress = getByName(host);
+        return resolvedAddress.getHostAddress(); // Return the resolved IP as a string.
     }
 }
