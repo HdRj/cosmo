@@ -101,6 +101,7 @@ ldap:
     manager:
       username: ~
       password: ~
+    tls-reqcert: "allow"
     filter: (&(sendmailMTAMapValue=%u)(o=%o))
     base: ou=other,ou=services,dc=me,dc=local
     search-scope: SUBTREE
